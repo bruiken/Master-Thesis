@@ -32,8 +32,6 @@
 \theoremstyle{definition}
 \newtheorem{example}{Example}[chapter]
 
-\newcommand{\co}{clone\,\&\,own\xspace}
-
 \makeatletter %otherwise geometry resets everything
 \Gm@restore@org
 \makeatother
@@ -52,7 +50,7 @@
 \begin{document}
 \begin{titlepage}
 \begin{center}
-\textsc{\LARGE Bachelor thesis\\Computing Science}\\[1.5cm]
+\textsc{\LARGE Master Thesis\\Software Science}\\[1.5cm]
 \includegraphics[height=100pt]{logo}
 
 \vspace{0.4cm}
@@ -69,7 +67,7 @@ Bob Ruiken\\
 s4721306
 \end{flushleft}
 \end{minipage}
-\begin{minipage}[t]{0.45\textwidth}
+\begin{minipage}[t]{0.48\textwidth}
 \begin{flushright} \large
 \textit{First supervisor/assessor:}\\
 Daniel Str{\"u}ber\\
@@ -84,14 +82,14 @@ Thorsten Berger\\
 \end{center}
 \end{titlepage}
 
+\input{commands}
+
 \input{abstract}
 
 \setcounter{tocdepth}{1}
 \tableofcontents
 
 \setlength{\parskip}{10pt}
-
-\input{commands}
 
 \input{introduction}
 \input{background}

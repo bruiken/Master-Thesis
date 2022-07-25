@@ -107,16 +107,14 @@ In this example, we will create the running example as described in the backgrou
 To this end, we need to fill out the tuple that describes a system (\( \virtualplatformtype \)).
 This tuple consists of the assets, the features, the identities and the contents.
 \end{example}
-\begin{wrapfigure}{r}{0.3\textwidth}
+\begin{figure}
   \centering
-  \resizebox{0.28\textwidth}{!}{%
   \begin{tikzpicture}
     \treethree{OS}{0}{0}{$f_1$}{$c_1$}{$c_2$}{$c_3$}{}{$\mathit{CLI}$}{$\mathit{logging}$}
   \end{tikzpicture}
-  }%
   \caption{The example system in the form of an asset tree.}
   \label{fig:example:basicsystem}
-\end{wrapfigure}
+\end{figure}
 First, we define the set of features, identities and contents. Our codebase
 will consist of six assets, so we get six identities and six contents. We only
 have two features in our system. For the features, we get \( \features = \left\{ \mathit{logging}, \mathit{CLI} \right\} \),
@@ -378,18 +376,16 @@ operator on the defined asset tree. We look at an application where our choice i
 negation of the \emph{CLI} feature. For simplicity, this \emph{get} operations will
 not be called on the root of the tree ($a_6$) but on the file asset ($a_4$).
 \end{example}
-\begin{wrapfigure}{r}{0.3\textwidth}
+\begin{figure}
   \centering
-  \resizebox{0.28\textwidth}{!}{%
   \begin{tikzpicture}
     \treethree{OS}{0}{0}{$f_1$}{$c_1$}{$c_2$}{$c_3$}{}{$\mathit{CLI}$}{$\mathit{logging}$}
     \treeone{OV}{0}{-2.5}{$f'_1$}{$c_1$}{}
     \path[] (OSAS) edge[double,-Stealth] node[left] {$\mathit{get}\left(f_1, \neg\mathit{CLI}\right)$} (OVAN);
   \end{tikzpicture}
-  }%
   \caption{Example application of the \emph{get} operator with a non-trivial choice.}
   \label{fig:example:get2}
-\end{wrapfigure}
+\end{figure}
 Again, we call the \emph{get} operator applied to the file asset, with \(\neg\mathit{CLI}\)
 as the choice expression: we want to look at the result of \(\vpgetfunc\left(a_4, \neg\mathit{CLI}\right)\).
 The result of this application can be seen in Figure~\ref{fig:example:get2}. We see that
@@ -672,7 +668,6 @@ types, we do not want to order assets such as files.
 
 \begin{figure}
   \centering
-  \resizebox{0.6\textwidth}{!}{%
   \begin{tikzpicture}
     \node[] (T1R) at (0, 0) {$r_1$};
     \node[] (T1A1) at (-.5,-1) {$a_1$};
@@ -716,7 +711,6 @@ types, we do not want to order assets such as files.
     \path[] (T3T4MANCH.north) edge[double,-Stealth,bend right=-10] node[right, yshift=-5mm, xshift=-5mm] {$\textit{put}\left(r'_2, \left\{ a_3 \right\}, r_1, C, B\right)$} (T4V1A2); 
     \path[] (T3T4MANCH.north) edge[double,-Stealth,bend left=-10] node[] {} (T4V2A3); 
   \end{tikzpicture}
-  }%
   \caption{Example of how an alignment conflict might arise.}
   \label{fig:operator:vp:alignmentproblem}
 \end{figure}
@@ -778,16 +772,8 @@ presence conditions higher up in the tree. If this simplification is always
 attempted at all assets in the tree, the ``not cleaning up'' of the feature
 models is irrelevant.
 
-\begin{example}[Continuation of Example \ref{example:getoperator}]
-  We continue the example in which we applied the \emph{get} operator to the
-  system we introduced even before that. Specifically, we will continue the
-  second example where we applied the \emph{get} operator with as choice
-  expression \(\neg\mathit{CLI}\). An overview can be seen in Figure~\ref{fig:example:put}.
-  Note that we shortened the names of the features to their first letters.
-\end{example}
-\begin{wrapfigure}{r}{0.45\textwidth}
+\begin{figure}
   \centering
-  \resizebox{0.43\textwidth}{!}{%
   \begin{tikzpicture}
     \treethree{OS}{0}{0}{$f_1$}{$c_1$}{$c_2$}{$c_3$}{}{$\mathit{C}$}{$\mathit{L}$}
     \treeone{OV}{0}{-3.5}{$f_2$}{$c_1$}{}
@@ -813,10 +799,16 @@ models is irrelevant.
     \path[] (EVAN) edge[double,-Stealth] node[right] {$\mathit{put}\left(f'_2, \left\{ c_1, c_4, m_1 \right\}, f_1, \neg\mathit{C}, \mathit{G}\right)$} (4, -2);
     \path[] (OVAE) edge[double,-Stealth] node[below] {Actual Edit} (EVAW);
   \end{tikzpicture}
-  }%
   \caption{Example application of the \emph{put} operator.}
   \label{fig:example:put}
-\end{wrapfigure}
+\end{figure}
+
+\begin{example}[Continuation of Example \ref{example:getoperator}]
+  We continue the example in which we applied the \emph{get} operator to the
+  system we introduced even before that. Specifically, we will continue the
+  second example where we applied the \emph{get} operator with as choice
+  expression \(\neg\mathit{CLI}\). An overview can be seen in Figure~\ref{fig:example:put}.
+  Note that we shortened the names of the features to their first letters.
 The actual edit this time is to add a new feature called \emph{GUI} (in the
 figure shortened to just \emph{G}.) For this, we have to edit $a_1$ (identified
 by $c_1$) and we have to add two new assets identified by $c_4$ and $m_1$,
@@ -832,3 +824,4 @@ identified as $c'_1$, gets as presence condition the ambition. Lastly, we need t
 apply $c_4$, this leads to an alignment conflict as we do not know if we should add
 it before $c_2$, after $c_2$ or after $c_3$. We decide to put it right after $c'_1$.
 This new asset also gets the ambition as its presence condition.
+\end{example}

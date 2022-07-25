@@ -61,7 +61,6 @@ the system as a whole can also be seen in Figure \ref{fig:operator:overview}.
 
 \begin{figure}
   \centering
-  \resizebox{0.5\textwidth}{!}{%
   \begin{tikzpicture}
     \node[] (OS) at (0, 2) {$s$};
     \node[] (OV) at (0, 0) {$v$};
@@ -75,7 +74,6 @@ the system as a whole can also be seen in Figure \ref{fig:operator:overview}.
     \path[dashed,->] (OV) edge[bend right=30] node[right, yshift=-3mm] {$\mathit{put}\left(\mathit{empty}\left(v\right), s, c, c\right)$} (OS);
     \path[->] (EV) edge[bend right=30] node[right] {$\mathit{put}\left(d(v'), s, c, a\right)$} (ES); 
   \end{tikzpicture}
-  }%
   \caption{Overview of operator relationships.}
   \label{fig:operator:overview}
 \end{figure}
@@ -140,7 +138,6 @@ indeed makes our definition of \emph{put} adhere to the lens laws.
 
 \begin{figure}
   \centering
-  \resizebox{0.6\textwidth}{!}{%
   \begin{tikzpicture}
     \node[] (T1R) at (0, 2) {$r_1$};
     \node[] (T1A1) at (-1,1) {$a_1$};
@@ -181,7 +178,6 @@ indeed makes our definition of \emph{put} adhere to the lens laws.
     \path[] (T3R) edge[double,-Stealth,bend right=30] node[right] {$\textit{put}\left(r'_2, \left\{ a_1, a_4 \right\}, r_1, A, B\right)$} (T4A2); 
     \path[] (T4A2) edge[dashed,double,-Stealth,bend left=-30] node[left] {$\textit{get}\left(r_3, ?\right)$} (T3R); 
   \end{tikzpicture}
-  }%
   \caption{Example of relationships between lens operators on the Virtual Platform showing why we need a restriction on the ambition expresion.}
   \label{fig:operator:vp:example}
 \end{figure}

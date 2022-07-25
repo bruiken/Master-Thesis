@@ -24,9 +24,8 @@ at the restriction we placed on the \emph{put} operator, as we do not want it to
 restrict us from using any common edit pattern.
 \clearpage
 \section{Code-Adding Patterns}
-\begin{wrapfigure}{r}{0.4\textwidth}
+\begin{figure}
   \centering
-  \resizebox{0.38\textwidth}{!}{%
   \begin{tikzpicture}
     \treeone{OS}{0}{0}{$r_1$}{$a_1$}{}
     \treeone{OV}{0}{-2.5}{$r_2$}{$a_1$}{}
@@ -36,10 +35,9 @@ restrict us from using any common edit pattern.
     \path[] (OSAS) edge[double,-Stealth] node[left] {$\mathit{get}\left(r_1, \mathit{true}\right)$} (OVAN);
     \path[] (EVAN) edge[double,-Stealth] node[right] {$\mathit{put}\left(r'_2, \left\{ a_2 \right\}, r_1, \mathit{true}, \mathit{A}\right)$} (ESAS);
   \end{tikzpicture}
-  }%
   \caption{Workflow for adding a new asset, relevant for patterns \emph{P1} through \emph{P3}.}
   \label{fig:patterns:p1}
-\end{wrapfigure}
+\end{figure}
 \subsection*{P1 AddIfdef, P2 AddIfdef*, P3 AddIfdefElse}
 The first three patterns are all grouped since they have a common goal:
 adding new code with a presence condition. They were previously split up because
@@ -55,9 +53,8 @@ particular, this means that we cannot have any asset $a$ in our view such that
 This process can be seen in Figure~\ref{fig:patterns:p1}.
 
 \subsection*{P4 AddIfdefWrapElse, P5 AddIfdefWrapThen}
-\begin{wrapfigure}{r}{0.4\textwidth}
+\begin{figure}
   \centering
-  \resizebox{0.38\textwidth}{!}{%
   \begin{tikzpicture}
     \treeone{OS}{0}{0}{$r_1$}{$a_1$}{}
     \treeone{OV}{0}{-2.5}{$r_2$}{$a_1$}{}
@@ -67,10 +64,9 @@ This process can be seen in Figure~\ref{fig:patterns:p1}.
     \path[] (OSAS) edge[double,-Stealth] node[left] {$\mathit{get}\left(r_1, \mathit{true}\right)$} (OVAN);
     \path[] (EVAN) edge[double,-Stealth] node[right] {$\mathit{put}\left(r'_2, \left\{ a_1 \right\}, r_1, \mathit{true}, \mathit{A}\right)$} (ESAS);
   \end{tikzpicture}
-  }%
   \caption{Workflow for wrapping assets with presence conditions, relevant for patterns \emph{P4} and \emph{P5}.}
   \label{fig:patterns:p4}
-\end{wrapfigure}
+\end{figure}
 These edit operations are for the cases where an existing asset without a
 presence condition needs to get a presence condition, and another asset is
 created with the negation of that presence condition. As with the previous
@@ -91,9 +87,8 @@ This edit operation is not relevant to us, it is about repairing broken
 preprocessor annotations. We do not work with \texttt{\#ifdef} statements,
 however.
 
-\begin{wrapfigure}{r}{0.4\textwidth}
+\begin{figure}
   \centering
-  \resizebox{0.38\textwidth}{!}{%
   \begin{tikzpicture}
     \treetwo{OS}{0}{0}{$r_1$}{$a_1$}{$a_2$}{$A$}{$B$}
     \treetwo{OV}{0}{-2.5}{$r_2$}{$a_1$}{$a_2$}{$A$}{$B$}
@@ -103,10 +98,10 @@ however.
     \path[] (OSAS) edge[double,-Stealth] node[left] {$\mathit{get}\left(r_1, \mathit{true}\right)$} (OVAN);
     \path[] (EVAN) edge[double,-Stealth] node[right] {$\mathit{put}\left(r'_2, \left\{ a_2 \right\}, r_1, \mathit{true}, \mathit{true}\right)$} (ESAS);
   \end{tikzpicture}
-  }%
   \caption{Workflow for removing assets, relevant for patterns \emph{P8} and \emph{P9}.}
   \label{fig:patterns:p8}
-\end{wrapfigure}
+\end{figure}
+
 \section{Code-Removing Patterns}
 \subsection*{P8 RemNormalCode, P9 RemIfdef}
 These patterns cover removing normal code, and code \emph{with} preprocessor
@@ -126,9 +121,8 @@ removing some other code. These ill-formed annotations cannot occur in our
 system as the presence conditions are embedded in the assets.
 
 \section{Other Patterns}
-\begin{wrapfigure}{r}{0.4\textwidth}
+\begin{figure}
   \centering
-  \resizebox{0.38\textwidth}{!}{%
   \begin{tikzpicture}
     \treetwo{OS}{0}{0}{$r_1$}{$a_1$}{$a_2$}{$A$}{}
     \treetwo{OV}{0}{-2.5}{$r_2$}{$a_1$}{$a_2$}{$A$}{}
@@ -138,10 +132,9 @@ system as the presence conditions are embedded in the assets.
     \path[] (OSAS) edge[double,-Stealth] node[left] {$\mathit{get}\left(r_1, \mathit{true}\right)$} (OVAN);
     \path[] (EVAN) edge[double,-Stealth] node[right] {$\mathit{put}\left(r'_2, \left\{ a_2 \right\}, r_1, \mathit{true}, \neg\mathit{A}\right)$} (ESAS);
   \end{tikzpicture}
-  }%
   \caption{Workflow for giving an asset a non-trivial presence condition, relevant for pattern \emph{P11}. In this case, we want to give $a_2$ a presence condition of $A$.}
   \label{fig:patterns:p11}
-\end{wrapfigure}
+\end{figure}
 \subsection*{P11 WrapCode}
 This pattern wraps non-variational code (with a trivial presence condition)
 with some presence condition. The way we can do this is by obtaining the asset
@@ -264,7 +257,6 @@ we have edited.
 
 \begin{figure}
     \centering
-    \resizebox{0.6\textwidth}{!}{%
     \begin{tikzpicture}
         \node[draw,align=left] (OS) at (0,0) {\texttt{\#ifdef A} \\ \texttt{  do\_something()} \\ \texttt{\#else} \\ \texttt{  do\_something\_else()} \\ \texttt{\#endif}};
         \node[draw,align=left] (ES) at (6,0) {\texttt{\#ifdef A} \\ \texttt{  do\_something\_different()} \\ \texttt{\#else} \\ \texttt{  do\_something\_else()} \\ \texttt{\#endif}};
@@ -276,7 +268,6 @@ we have edited.
         \path[] (ES) edge[bend left=-30,double,-Stealth,dashed,red] node[left, black] {$\mathit{get}\left(\cdot, \mathit{A}\right)$} (EV);
         \path[] (EV) edge[bend right=30,double,-Stealth] node[right] {$\mathit{put}\left(\cdot, \cdot, \mathit{true}, \mathit{A}\right)$} (ES);
     \end{tikzpicture}
-    }%
     \caption{Example showing how the system in~\cite{stuanciulescu2016} does not adhere to the \putget~law. The edited view (bottom-right) does not follow from the red edge
              coming from the edited source (top-right). Note that this same limitation applies to our system, hence the restriction we applied on the \emph{put} operator.}
     \label{fig:prevsystem:counterexample}
