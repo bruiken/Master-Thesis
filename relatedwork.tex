@@ -1,0 +1,115 @@
+\chapter{Related work}\label{sec:relatedwork}
+\section{View-Based Editing}
+As noted above, the most closely related work is that of St{\u{a}}nciulescu
+et al., where a projection-based variation control system is designed~\cite{stuanciulescu2016}.
+For this, they use so-called \emph{Choice Calculus}~\cite{walkingshaw2012} to
+define the system, a formal language to model variation in software.
+This work relieved the restrictions on the \emph{put} operator from previous
+work of Walkingshaw and Ostermann~\cite{walkingshaw2014} by using a looser
+definition of the \emph{Edit-Isolation Principle}. The principle says that 
+the \emph{put} operator cannot affect code outside of the view given by the
+\emph{get} operator. The work of Walkingshaww and Ostermann did not make use
+of an ambition operator yet, which avoids the complications that we deal with 
+in our work. For this setup, they proved the lense laws, as the present work 
+does for the broader scope of view-based editing with ambitions.
+
+There is a lot of research into easing programming in variant-rich software.
+In the work of K{\"a}stner et al., an IDE is created to visualise software
+variabilities in the source code. To this end, they use a tool called
+\emph{CIDE} which was created in earlier work ~\cite{kastner2008, kastner2008granularity}.
+They aim to help developers to understand and explore individual features.
+Another visualisation tool similar to \emph{CIDE} is created by Heidenreich
+et al.. MappingViews is a tool that visualises different views of variational
+software to the programmer~\cite{heidenreich2008}. Nestor et al. present more
+work on visualisation which scales better to medium and large software product
+lines~\cite{nestor2007visualisation}. These tools are limited to visualisation,
+they do not deal with the view-update problem.
+
+Kersten and Murphy created an Eclipse plugin called Mylar that uses task
+contexts to improve programmer productivity~\cite{kersten2006using}. Their
+plugin stores structural relationships of programs in so-called task contexts.
+Programmers can then use these contexts to quickly swap between contexts. This
+tool is more of a tracing tool and does not work on the view-update problem.
+
+This research direction has roots in earlier research on software maintainability.
+Weiser has shown in 1984 how \emph{Slicing} can help understand programs~\cite{weiser1984program}. With this
+approach, it is possible to select several variables and see the flow of
+the data in this program. In the same year, Linton created a way to store
+programs in a database such that different views, cross-sections or slices
+could easily be extracted or updated~\cite{linton1984}. These tools are also
+for visualisations.
+
+Chu-Caroll et al. created a system called VSC, which stands for visual
+separation of concerns, this system can provide certain views of the source
+code in terms of features~\cite{chu2003visual}. VSC, like the Virtual Platform,
+stores programs using finer-grained artefacts. They do this on a storage-based
+level, such that it becomes language independent. Hofer et al. try to tackle
+the problem of multiple views at the filesystem level using the Leviathan
+filesystem~\cite{hofer2010toolchain}. The idea is that other tools all need
+special development environments, by having variant views at the filesystem
+level, other tools can be used without issues. While VSC does not work with
+write-back (the view-update problem), the Leviathan filesystem can do this.
+It is however limited to changing only non-variational code. Aside from that, it sometimes
+uses heuristics to decide where changed code should go in the source.
+
+More in terms of variability management, we of course have the Virtual
+Platform, which aims to bridge the gap between \emph{Clone \& Own} and a full
+\emph{Integrated Platform}~\cite{mahmood2021}. The Virtual Platform is relevant
+to us, as we created our implementation onto it. Similar to the Virtual Platform,
+research has also been done on tools to transition from \emph{Clone \& Own} to an
+integrated platform, for example by Schw{\"a}gerl et al. in SuperMod~\cite{schwagerl2015}.
+ECCO is a framework and tool for easing the work on variational software created
+by Fischer et al.. It can find common parts and create new software variants
+using those parts~\cite{fischer2014enhancing}. 
+
+\section{Lenses}
+Lenses were introduced by Foster et al. as a solution to the view-update
+problem that originates from databases~\cite{foster2007}. Here, lenses were
+formalised and lens laws were created.
+
+Many different types and classes of lenses have been created in the meanwhile.
+All of the lenses noted here differ from the first definition of lenses but
+are not able to carry configuration data. Hence the need for us to create \emph{Variational Lenses}.
+There is a distinction between Symmetric and Asymmetric lenses~\cite{hofmann2011symmetric}.
+Asymmetric lenses usually have a source and a view, where the view contains a
+subset of the information of the source. Symmetric lenses, on the other hand,
+have two sets that both contain some information that the other set does not
+have. 
+
+Boomerang, a language created by Bohannon et al., can create lenses that work
+between string data~\cite{bohannon2008boomerang}. The user creates a lens by
+writing it in the specification of Boomerang and can then use it to transform
+strings. The language is based on regular expressions. Boomerang also contains
+logic to deal with alignment problems within the data. To this end, Matching
+Lenses were created~\cite{barbosa2010matching} by Barbosa et al.. Matching
+lenses expand on the earlier definition of Dictionary Lenses which were also
+included in Boomerang in~\cite{bohannon2008boomerang}. These lenses make use of
+extra data structures to save the ordering of the data, this data structure can
+then be used in the definition of the \emph{put} operator. Miltner et al. have
+created a way to synthesise Bijective Lenses from examples of in- and output.
+The resulting lens is defined in the Boomerang language~\cite{miltner2017synthesizing}.
+Bijective lenses differ from the standard lenses in that they do not hide data
+going from the source to the view, rather they only change the structure of it.
+Another extension to Boomerang is Quotient Lenses, created by Foster et al..
+Quotient lenses can contain extra functions to normalise input or output data~\cite{foster2008quotient}.
+This way, spacing or newlines can be normalised before going through the
+\emph{get} and \emph{put} functions.
+
+Monadic Lenses deal with the fact that most lenses are pure, while most
+programming languages have side effects. In \cite{abou2016reflections},
+different monadic lenses are discussed.
+
+A more applied version of a lens is for example Lenses for Web Data~\cite{rajkumar2014lenses}.
+Here, lenses are implemented to create forms for web pages and to obtain the
+data from them. This is implemented in Haskell.
+
+An example of symmetric lenses are Edit Lenses, created by Hofmann et al.. Edit
+lenses work by transforming between representations using descriptions of
+changes instead of the entire views~\cite{hofmann2012edit}. 
+
+Our new \emph{Variational Lenses} can be seen as asymmetric lenses, as we only
+hide data in one direction (from the source to the view). We also take some 
+inspiration from edit lenses, however, as we use a ``diff'' structure in the \emph{put}
+operator. This structure can be seen as the descriptions of changes made, but
+in contrast to edit lenses, these structures by themselves are not sufficient
+to make the operator work.

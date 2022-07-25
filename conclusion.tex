@@ -1,0 +1,32 @@
+\chapter{Conclusion}\label{sec:conclusion}
+In this paper, we created and formalised a lens for view-based editing. From 
+this formalisation
+specifically for the Virtual Platform, we derived a more general type of lens,
+which we call \emph{Variational Lenses}. This lens differs from other lenses
+since it can carry configuration with it and enables it to be a framework for
+view-based editing. In the evaluation, we have shown that the system
+can comply with all common edit operations that were previously established. 
+We have also shown that this new definition allows for more general use than 
+the most closely related previous work.
+In particular, we can create and edit
+independent features in a limited view, which was not possible in the previous work. 
+The downside of the system is that we had to include a limitation to the 
+\emph{put} operator of the lens, since without it, one of the lens laws would
+not hold. We also established that this lens law does not hold in the previous
+system without this new restriction. Finally, we implemented the lens in the
+Virtual Platform as two new operators.
+
+The definition of the Variational Lenses was extracted from the formalisation
+of the \emph{get} and \emph{put} operators. With this new formalisation, we had
+to adapt the existing lens laws for our new lens and we have proven that our
+implementation of the lens adheres to these adapted lens laws.
+
+There are several possible directions for future work. First, it would be worthwhile
+to study the usability of our proposed operations, in the context of a user study, 
+in which developers could solve some program evolution tasks in a certain view and use 
+our framework to keep the view synchronized with the overall platform. Second, while 
+we achieved our results in the context of a specific variability management system 
+(Virtual Platform), it would be interesting to further increase the scope of our 
+contribution by investigating alternative program representations. Third, a more 
+large-scale mining study of editing operations could improve confidence in the 
+generality of our results and scalability of our implemented framework.

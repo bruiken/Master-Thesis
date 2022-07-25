@@ -1,0 +1,291 @@
+\chapter{Evaluation}\label{sec:evaluation}
+This section will cover the evaluation of the operators we designed and
+formalised in Section~\ref{sec:vp:formalisation}. We will perform this
+evaluation by looking at common editing operations in software systems and
+seeing how well our system applies to these operations.
+
+\section{Context and Methodology}
+The editing operations we will look into are a collection of fourteen editing
+operations, structured into three groups (code-adding, code-removing and other), 
+that have been identified in~\cite{stuanciulescu2016}. These editing operations
+have been extracted from commit data from the Marlin 3D printer firmware\footnote{\url{https://github.com/MarlinFirmware/}}.
+This was a suitable repository as it is highly configurable and large (more than 140
+features and 40,000 lines of code). 
+
+In this evaluation, we follow the same process as St{\u{a}}nciulescu et al.: we
+take a look at every edit operation and see how our method supports them. We keep
+the same naming scheme as the operations were defined in the previous work, even
+though they are centred around \texttt{\#ifdef} statements. Because of the previous
+reasons, combined with the fact that the previous method also uses \emph{choices}
+and \emph{ambitions}, it is possible for us to then compare the applicabilities 
+of both systems to these edit operations. For our system to be usable, we
+want to be able to support all of the operations. We will also take a closer look 
+at the restriction we placed on the \emph{put} operator, as we do not want it to
+restrict us from using any common edit pattern.
+\clearpage
+\section{Code-Adding Patterns}
+\begin{wrapfigure}{r}{0.4\textwidth}
+  \centering
+  \resizebox{0.38\textwidth}{!}{%
+  \begin{tikzpicture}
+    \treeone{OS}{0}{0}{$r_1$}{$a_1$}{}
+    \treeone{OV}{0}{-2.5}{$r_2$}{$a_1$}{}
+    \treetwo{EV}{3}{-2.5}{$r'_2$}{$a_1$}{$a_2$}{}{}
+    \treetwo{ES}{3}{0}{$r_3$}{$a_1$}{$a_2$}{}{$A$}
+    \path[] (OVAE) edge[double,-Stealth] node[midway, below] {Manual edit} (EVAW);
+    \path[] (OSAS) edge[double,-Stealth] node[left] {$\mathit{get}\left(r_1, \mathit{true}\right)$} (OVAN);
+    \path[] (EVAN) edge[double,-Stealth] node[right] {$\mathit{put}\left(r'_2, \left\{ a_2 \right\}, r_1, \mathit{true}, \mathit{A}\right)$} (ESAS);
+  \end{tikzpicture}
+  }%
+  \caption{Workflow for adding a new asset, relevant for patterns \emph{P1} through \emph{P3}.}
+  \label{fig:patterns:p1}
+\end{wrapfigure}
+\subsection*{P1 AddIfdef, P2 AddIfdef*, P3 AddIfdefElse}
+The first three patterns are all grouped since they have a common goal:
+adding new code with a presence condition. They were previously split up because
+a distinction was made between adding one and multiple assets, and adding just an
+\texttt{\#ifdef} and adding an \texttt{\#ifdef} combined with a \texttt{\#else} clause.
+For us, adding new code always means adding a new asset. To do this, we can \emph{get}
+the tree with a trivial choice (\(\truefeature\)) and \emph{put} the tree back with as
+ambition the desired presence condition. We have to take care however, there is a limitation
+on the \emph{put} operator. We cannot have any asset in the editing view that
+has a presence condition which is not satisfiable with the ambition. In
+particular, this means that we cannot have any asset $a$ in our view such that
+\(\presenceconditionfunc\left(a\right) \land \mathit{ambition} \not\in \sat\).
+This process can be seen in Figure~\ref{fig:patterns:p1}.
+
+\subsection*{P4 AddIfdefWrapElse, P5 AddIfdefWrapThen}
+\begin{wrapfigure}{r}{0.4\textwidth}
+  \centering
+  \resizebox{0.38\textwidth}{!}{%
+  \begin{tikzpicture}
+    \treeone{OS}{0}{0}{$r_1$}{$a_1$}{}
+    \treeone{OV}{0}{-2.5}{$r_2$}{$a_1$}{}
+    \treeone{EV}{3}{-2.5}{$r'_2$}{$a_1$}{}
+    \treetwo{ES}{3}{0}{$r_3$}{$a_1$}{$a'_1$}{$\neg A$}{$A$}
+    \path[] (OVAE) edge[double,-Stealth] node[midway, below] {Manual edit} (EVAW);
+    \path[] (OSAS) edge[double,-Stealth] node[left] {$\mathit{get}\left(r_1, \mathit{true}\right)$} (OVAN);
+    \path[] (EVAN) edge[double,-Stealth] node[right] {$\mathit{put}\left(r'_2, \left\{ a_1 \right\}, r_1, \mathit{true}, \mathit{A}\right)$} (ESAS);
+  \end{tikzpicture}
+  }%
+  \caption{Workflow for wrapping assets with presence conditions, relevant for patterns \emph{P4} and \emph{P5}.}
+  \label{fig:patterns:p4}
+\end{wrapfigure}
+These edit operations are for the cases where an existing asset without a
+presence condition needs to get a presence condition, and another asset is
+created with the negation of that presence condition. As with the previous
+system, we can support this workflow by applying \emph{get} with the trivial
+expression \(\truefeature\), to then edit that asset and apply the \emph{put}
+operator with the ambition set to the desired presence condition of the
+edited line. This process can also be seen in Figure~\ref{fig:patterns:p4}.
+
+\subsection*{P6 AddNormalCode}
+In this edit operation, no changes are made to variability. In this case, we
+should use the \emph{get} operator with as choice the presence condition of the
+code we want to edit (this might be the trivial choice.) After editing we
+should again use the same ambition as choice to ensure we do not change any
+presence conditions.
+
+\subsection*{P7 AddAnnotation}
+This edit operation is not relevant to us, it is about repairing broken 
+preprocessor annotations. We do not work with \texttt{\#ifdef} statements,
+however.
+
+\begin{wrapfigure}{r}{0.4\textwidth}
+  \centering
+  \resizebox{0.38\textwidth}{!}{%
+  \begin{tikzpicture}
+    \treetwo{OS}{0}{0}{$r_1$}{$a_1$}{$a_2$}{$A$}{$B$}
+    \treetwo{OV}{0}{-2.5}{$r_2$}{$a_1$}{$a_2$}{$A$}{$B$}
+    \treeone{EV}{3}{-2.5}{$r'_2$}{$a_1$}{$A$}
+    \treeone{ES}{3}{0}{$r_3$}{$a_1$}{$A$}
+    \path[] (OVAE) edge[double,-Stealth] node[midway, below] {Manual edit} (EVAW);
+    \path[] (OSAS) edge[double,-Stealth] node[left] {$\mathit{get}\left(r_1, \mathit{true}\right)$} (OVAN);
+    \path[] (EVAN) edge[double,-Stealth] node[right] {$\mathit{put}\left(r'_2, \left\{ a_2 \right\}, r_1, \mathit{true}, \mathit{true}\right)$} (ESAS);
+  \end{tikzpicture}
+  }%
+  \caption{Workflow for removing assets, relevant for patterns \emph{P8} and \emph{P9}.}
+  \label{fig:patterns:p8}
+\end{wrapfigure}
+\section{Code-Removing Patterns}
+\subsection*{P8 RemNormalCode, P9 RemIfdef}
+These patterns cover removing normal code, and code \emph{with} preprocessor
+annotations. For us, there is no difference, as the presence conditions are
+embedded in the assets. To cover this pattern, we can apply the
+\emph{get} operator with any choice that is satisfiable with the presence
+condition of the target asset. Then we can delete the asset to finally apply
+the \emph{put} operator with any ambition such that the old presence condition
+in conjunction with the negation of the ambition is not satisfiable. Using as
+ambition \(\truefeature\) always works. A visualisation of this pattern can be
+seen in Figure~\ref{fig:patterns:p8}.
+
+\subsection*{P10 RemAnnotation}
+Similarly to \emph{P7}, this is not a relevant operation for us. This edit
+operation is about removing annotations that were unintentionally left by
+removing some other code. These ill-formed annotations cannot occur in our
+system as the presence conditions are embedded in the assets.
+
+\section{Other Patterns}
+\begin{wrapfigure}{r}{0.4\textwidth}
+  \centering
+  \resizebox{0.38\textwidth}{!}{%
+  \begin{tikzpicture}
+    \treetwo{OS}{0}{0}{$r_1$}{$a_1$}{$a_2$}{$A$}{}
+    \treetwo{OV}{0}{-2.5}{$r_2$}{$a_1$}{$a_2$}{$A$}{}
+    \treeone{EV}{3}{-2.5}{$r'_2$}{$a_1$}{$A$}
+    \treetwo{ES}{3}{0}{$r_3$}{$a_1$}{$a_2$}{$A$}{$A$}
+    \path[] (OVAE) edge[double,-Stealth] node[midway, below] {Manual edit} (EVAW);
+    \path[] (OSAS) edge[double,-Stealth] node[left] {$\mathit{get}\left(r_1, \mathit{true}\right)$} (OVAN);
+    \path[] (EVAN) edge[double,-Stealth] node[right] {$\mathit{put}\left(r'_2, \left\{ a_2 \right\}, r_1, \mathit{true}, \neg\mathit{A}\right)$} (ESAS);
+  \end{tikzpicture}
+  }%
+  \caption{Workflow for giving an asset a non-trivial presence condition, relevant for pattern \emph{P11}. In this case, we want to give $a_2$ a presence condition of $A$.}
+  \label{fig:patterns:p11}
+\end{wrapfigure}
+\subsection*{P11 WrapCode}
+This pattern wraps non-variational code (with a trivial presence condition)
+with some presence condition. The way we can do this is by obtaining the asset
+with some choice (for example, the trivial choice), removing the asset, to then
+\emph{put} the changes back using an ambition equal to the negation of the
+desired presence condition. Deleting an asset makes the presence condition of
+the original asset a conjunction with the negation of the ambition. This pattern
+can be seen in Figure~\ref{fig:patterns:p11}.
+
+\subsection*{P12 UnwrapCode}
+In contrast to the previous pattern, this pattern removes the presence condition
+from an asset. That is, we want to change the presence condition such that it
+becomes the trivial one. We can do this by trying to add a new asset with the
+negation of the asset its presence condition. But the better way to support
+this is to remove the presence condition from the asset manually, since
+adding an asset with the negation of the presence condition requires copying
+and pasting the same code twice.
+
+\subsection*{P13 ChangePC}
+Changing the presence condition is an operation that is limited in our system.
+It can be like \emph{P11}, where we ``added'' onto the old presence condition,
+then we can delete the asset and use the negation of what we want to add to
+the presence condition as the ambition. But we cannot remove any parts of a
+presence condition by applying the \emph{put} operator.
+
+\subsection*{P14 MoveElse}
+Moving the \texttt{else} part of a preprocessor annotation is not a sensible action
+to us. Since we are not working with literal \texttt{\#ifdef} annotations. For
+us, moving the \texttt{else} part is nothing more than changing multiple presence
+conditions. Which we have covered in the previous edit operations.
+
+\section{Comparison}
+We will now compare the applicabilities of the edit operations above to the previous
+method. The previous method uses the exact same choices and ambitions as we did to
+``implement'' these operations. This means that even with the restriction of the
+\emph{put} operator, we can still support all of the edit patterns. The first
+conclusion we can thus draw is that our method has at least the level of applicability
+of the previous method.
+
+A goal of this work is to loosen the restriction of the \emph{ambition} expression,
+in comparison to the previous method. To do this, we needed the \emph{put} operator
+to not be reliant on the \emph{choice} expression. We know that this is not possible,
+hence the need for the restriction on the \emph{put} operator. But we still see an
+improvement in terms of applicability, which was already visible in Figure~\ref{fig:example:put}.
+The idea is that our definition of \emph{put} only uses the \emph{choice} expression
+in the internal check. When applying changes, it only uses the \emph{ambition} expression.
+This is in contrast to the previous system, where new \texttt{\#ifdef} statements were
+created with both the \emph{choice} and the \emph{ambition}. In particular, this means
+that we can create a new feature while removing certain other features from the view,
+as seen in the figure. If we were to apply the same strategy in the previous method, the
+new code would be added with as presence condition \(\mathit{GUI} \land \neg\mathit{CLI}\).
+This means that the new feature can only be enabled given that the \emph{CLI} feature is not.
+This same idea can be used in other editing patterns, which leads to the fact that the 
+choice used to obtain the views in the patterns \emph{P1}-\emph{P5}, \emph{P8}, \emph{P9}
+and \emph{P11}-\emph{P13} are completely free to the user, as long as the needed assets
+are obtained by them (their presence condition is satisfiable with the choice).
+Of course, the edit operations still have to admit to the restriction in the 
+\emph{put} operator. We will discuss the effects of this limitation in greater detail in 
+the next subsection. 
+
+The biggest limitations we came across are most noticeable in patterns
+\emph{P12} through \emph{P14}, which were equally limited in the previous system.
+We should note that when working with the Virtual Platform, a separate operator 
+to change the presence condition would be able to tackle these patterns. A final
+important difference with the previous system is that the new system is not (always)
+fully automatic: the user sometimes needs to choose the location of a new asset 
+when an Alignment Conflict has occurred. This can happen when certain assets are 
+not present in the view.
+
+\section{Put Limitation}
+The limitation we introduced for the \emph{put} operator in
+Section~\ref{sec:configlenses:vp} ensures that the \putget~law is satisfied.
+In all operations we do with the \emph{put} operator, we have to make sure that
+this limitation is met. This of course limits the operations we can do. We now
+discuss the severity of this limitation.
+
+Again, the limitation is as follows, for every asset $a$ in the view, the
+following must hold:
+\[
+  \mathit{choice} \land \mathit{ambition} \land \presenceconditionfunc(a) \in \sat
+\]
+Some parts of this limitation already logically follow from the \emph{get}
+operator. We already know that for every asset $a$ in the view, \(\mathit{choice} \land \presenceconditionfunc\left(a\right) \in \sat\). 
+This is by definition of the \emph{get} operator -- if this would not hold, the
+asset would not be in the view. At this point we can split the limitation up
+into two parts. Firstly, we must make sure that \(\mathit{choice} \land \mathit{ambition} \in \sat\),
+secondly, we must make sure that for every asset $a$ in the view, \(\mathit{ambition} \land \presenceconditionfunc\left(a\right) \in \sat\).
+The first part is a single expression that we must satisfy. It limits us in
+such a way that we cannot have an ambition that is the negation of the choice.
+We can still solve those situations, however. By deleting or editing
+existing assets, the existing assets get the negation of the ambition added to
+their presence conditions. So if we were to choose the ambition equal to the
+choice, then the negation of the choice is -- in a way -- used as the ambition.
+The second limitation then is that every asset has to be satisfiable with the
+chosen ambition. This can lead to some difficulties, we might get the view
+with the trivial choice (\(\truefeature\)) and edit some assets. If we want
+to \emph{put} these changes back with some ambition, all assets, even those not
+edited, must satisfy that their presence condition is satisfiable with this
+ambition. In other words: the presence conditions of the assets in the view
+must \emph{all} be satisfiable with the ambition expression. There are two ways
+to avoid this: we can either apply the \emph{get} operator to an asset such that
+the assets breaking this limitation are out of the view, or we can choose a
+\emph{choice} in the \emph{get} operator such that it already includes the ambition.
+
+Since this last restriction seems rather strict, we wonder how the previous
+method in~\cite{stuanciulescu2016} managed to overcome this issue. In this
+process, we figured that their method does not satisfy the \putget~law.
+With our ambition restriction applied to their method, this problem is solved. An
+example showing how the previous method does not adhere to the \putget~law can
+be found in Figure~\ref{fig:prevsystem:counterexample}. Here, we have two
+preprocessor annotations, which we check out using the trivial choice
+\emph{true}. We then edit the line covered by the first annotation to finally
+recombine the changes with as ambition \emph{A}. After minimisation, we get to
+the code shown in the top-right. Now the \putget~law says that we should be
+able to go back to this view using the \emph{get} operator with the initial
+expression and the ambition as the choice expression. In this case, this is just
+\emph{A}. But then we get to the problem. When we apply the \emph{get} operator
+with as choice \emph{A}, we do not get this view, but rather just the line that
+we have edited.
+
+\begin{figure}
+    \centering
+    \resizebox{0.6\textwidth}{!}{%
+    \begin{tikzpicture}
+        \node[draw,align=left] (OS) at (0,0) {\texttt{\#ifdef A} \\ \texttt{  do\_something()} \\ \texttt{\#else} \\ \texttt{  do\_something\_else()} \\ \texttt{\#endif}};
+        \node[draw,align=left] (ES) at (6,0) {\texttt{\#ifdef A} \\ \texttt{  do\_something\_different()} \\ \texttt{\#else} \\ \texttt{  do\_something\_else()} \\ \texttt{\#endif}};
+        \node[draw,align=left] (OV) at (0,-4) {\texttt{\#ifdef A} \\ \texttt{  do\_something()} \\ \texttt{\#else} \\ \texttt{  do\_something\_else()} \\ \texttt{\#endif}};
+        \node[draw,align=left] (EV) at (6,-4) {\texttt{\#ifdef A} \\ \texttt{  do\_something\_different()} \\ \texttt{\#else} \\ \texttt{  do\_something\_else()} \\ \texttt{\#endif}};            
+
+        \path[] (OV) edge[double,-Stealth] node[midway, below] {Manual edit} (EV);
+        \path[] (OS) edge[bend left=-30,double,-Stealth] node[left] {$\mathit{get}\left(\cdot, \mathit{true}\right)$} (OV);
+        \path[] (ES) edge[bend left=-30,double,-Stealth,dashed,red] node[left, black] {$\mathit{get}\left(\cdot, \mathit{A}\right)$} (EV);
+        \path[] (EV) edge[bend right=30,double,-Stealth] node[right] {$\mathit{put}\left(\cdot, \cdot, \mathit{true}, \mathit{A}\right)$} (ES);
+    \end{tikzpicture}
+    }%
+    \caption{Example showing how the system in~\cite{stuanciulescu2016} does not adhere to the \putget~law. The edited view (bottom-right) does not follow from the red edge
+             coming from the edited source (top-right). Note that this same limitation applies to our system, hence the restriction we applied on the \emph{put} operator.}
+    \label{fig:prevsystem:counterexample}
+\end{figure}
+
+A final note on the limitation in terms of the implementation in the Virtual
+Platform is that it is not a necessary limitation in terms of usability. The
+restriction is purely there for the \putget~law. If the user wants to ignore
+this law, they could still apply the \emph{put} operator without satisfying the
+law. It just might not be possible to extract that exact view from the source
+again. In the implementation in the Virtual Platform, this is done using an
+error that can be configured to be a warning instead.

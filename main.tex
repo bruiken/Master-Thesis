@@ -1,0 +1,108 @@
+\documentclass[11pt,a4paper]{report}
+
+% \usepackage{url}
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+% \usepackage{graphicx}
+\usepackage[all]{xy}
+% \usepackage{amsfonts}
+% \usepackage{todonotes}
+\usepackage{array}
+\usepackage{listings}
+\usepackage[a4paper]{geometry}
+\usepackage{lscape}
+\usepackage{bm}
+\usepackage{amsmath}
+\usepackage{algorithm}
+\usepackage{algorithmic}
+\usepackage{tikz}
+\usepackage{amsthm}
+\usepackage{hyperref}
+\usepackage{wrapfig}
+\usepackage{xspace}
+\hypersetup{
+    colorlinks,
+    citecolor=black,
+    filecolor=black,
+    linkcolor=black,
+    urlcolor=black
+}
+\usetikzlibrary{arrows.meta}
+\newtheorem{theorem}{Theorem}[chapter]
+\theoremstyle{definition}
+\newtheorem{example}{Example}[chapter]
+
+\newcommand{\co}{clone\,\&\,own\xspace}
+
+\makeatletter %otherwise geometry resets everything
+\Gm@restore@org
+\makeatother
+
+\setlength{\itemsep}{0cm}
+\setlength{\voffset}{0cm}
+\setlength{\headheight}{0cm}
+\setlength{\topmargin}{0cm}
+\setlength{\extrarowheight}{3pt} %for superscripts in tabular
+\setlength{\arraycolsep}{4pt}
+
+\lstset{basicstyle = \footnotesize, breaklines = true}
+
+\graphicspath{{imgs/}}
+
+\begin{document}
+\begin{titlepage}
+\begin{center}
+\textsc{\LARGE Bachelor thesis\\Computing Science}\\[1.5cm]
+\includegraphics[height=100pt]{logo}
+
+\vspace{0.4cm}
+\textsc{\Large Radboud University}\\[1cm]
+\hrule
+\vspace{0.4cm}
+\textbf{\Large Variational Lenses: A Formal Framework for View-Based Editing}\\[0.4cm]
+\hrule
+\vspace{2cm}
+\begin{minipage}[t]{0.45\textwidth}
+\begin{flushleft} \large
+\textit{Author:}\\
+Bob Ruiken\\
+s4721306
+\end{flushleft}
+\end{minipage}
+\begin{minipage}[t]{0.45\textwidth}
+\begin{flushright} \large
+\textit{First supervisor/assessor:}\\
+Daniel Str{\"u}ber\\
+\texttt{d.strueber@cs.ru.nl}\\[1.3cm]
+\textit{Second assessor:}\\
+Thorsten Berger\\
+\texttt{thorsten.berger@chalmers.se}
+\end{flushright}
+\end{minipage}
+\vfill
+{\large \today}
+\end{center}
+\end{titlepage}
+
+\input{abstract}
+
+\setcounter{tocdepth}{1}
+\tableofcontents
+
+\setlength{\parskip}{10pt}
+
+\input{commands}
+
+\input{introduction}
+\input{background}
+\input{formalisation}
+\input{configlenses}
+\input{evaluation}
+\input{relatedwork}
+\input{conclusion}
+
+\bibliographystyle{plain}
+\bibliography{bibliography}
+
+\end{document}
+\endinput

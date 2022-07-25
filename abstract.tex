@@ -1,0 +1,33 @@
+\begin{abstract}
+  Software systems typically become increasingly customizable over time. For instance, organizations need to tailor their systems towards specific customer requirements, including runtime environments, hardware, or performance and energy consumption. Organizations then typically start maintaining different clones of the system---a.k.a., \co---which is cheap and agile, but does not scale with the number of cloned variants and causes substantial maintenance overheads.
+	Then, organizations often integrate the variants into a configurable (`variational') platform.	
+  %their systems to suit the needs of their customers. In the \emph{Clone \& Own} strategy,
+  %the entire system is cloned every time the software needs to be adapted for a new
+  %customer. This is fast and agile but brings difficulties such as the need to propagate
+  %bug fixes and improvements between clones.
+  %The other strategy is an integrated platform in which all variants are embedded.
+	Using variational code, for instance using \texttt{\#ifdef} preprocessor directives, optional features
+  can be implemented in the same codebase. However, configurable platforms are complex systems, since developers need to work on many different variants at the same time. \texttt{\#ifdef} statements easily clutter the source code, challenging program comprehension and making development error-prone.
+  We advocate view-based editing of variational source code. Ideally, a developer can choose the subset of features to work on.
+  Previous work introduced a first conceptual investigation of view-based editing of
+  variational code, but, in absence of a more rigorous description of supported
+  operations and underlying assumptions, fell short to give any soundness guarantees.
+  
+	We address this gap by formalizing and implementing view-based editing for variational source code in a framework we call \emph{Variational Lenses}.
+	We   map out conditions under which soundness can be guaranteed, and give a soundness proof.
+  Our formalisation relies on lenses---a solution to the view-update problem typically
+  considered for bidirectional transformations. We formalise two functions,
+  one to obtain a restricted view from the source code set, and one to update the source
+  code given changes made to this restricted view.
+	%Our formalisation is based on the Virtual
+  %Platform, a variant management system that bridges the gap between \emph{Clone \& Own}
+  %and integrated platform development.
+  We evaluate the framework by showing how it can be applied to common edit operations,
+  which were previously identified from a real-world system. We show that the new
+  method can do at least as much as the previous system, plus adding more flexibility
+  in the meanwhile. This flexibility is added by enabling developers to create and edit
+  independent features in a view where other features are hidden. 
+	%, which
+  %have the added benefit that they can carry configuration   information. Lastly, we
+  %have implemented the new operators in the Virtual Platform.
+\end{abstract}

@@ -1,0 +1,78 @@
+\chapter{Introduction}\label{sec:introduction}
+Almost any software needs to exist in different variants. Organizations build software variants to address variable customer requirements.
+Two main strategies exist for building such software systems. First, with
+\emph{\co}~\cite{dubinsky2013exploratory}, a complete system 
+is \emph{cloned} and altered to customer-specific needs. This strategy is
+cheap, flexible and well supported by tools such as \emph{GIT}. Second, an opposing
+strategy, which scales well with many variants, is to integrate
+all variants into a \emph{configurable and integrated platform}~\cite{van2007software}, also known as a software product line.
+A common example of such a platform is the Linux kernel~\cite{she2010variability}, which has over 15000
+features nowadays and can be customized to run on small embedded devices or large supercomputer clusters. 
+However, creating a configurable and integrated platform is costly, while it is a complex software system that can be difficult to maintain.
+
+\looseness=-1
+%Once a software system has been integrated into a platform, instead of working
+%with \emph{\co}, it becomes variational.
+Integrated platforms rely on variability mechanisms---implementation techniques to realize variation points.
+%This variational code needs a 
+%means of variability management for all variants to co-exist in one system.
+The most common mechanisms are static compile-time statements such as
+\texttt{\#ifdef} preprocessor directives in C or C++.
+While these mechanisms are popular, they negatively influence
+the ease of writing, maintaining and evolving of code~\cite{favre1996preprocessors, spencer1992}, since the preprocessor directives clutter source code, and the developer needs to work on many different variants at the same time.
+To reduce the complexity of developing an integrated platform, the developer could work on a \emph{view} (or \emph{projection})
+of the system. Based on a \emph{configuration} certain features are activated
+or deactivated, leading to irrelevant parts of the code being removed. 
+This king of code editing has been proposed as \emph{view-based editing} or \emph{projectional editing of variational software} before~\cite{walkingshaw2014, le2011ifdef, kastner2008}.
+
+A more recent example is a method created by St{\u{a}}nciulescu et al.~\cite{stuanciulescu2016}, which, together with previous methods it is based on, make use of
+so-called \emph{lenses}. Lenses present a solution for the view-update problem, which
+originates from databases and are a form of bidirectional programming~\cite{foster2007}.
+The idea of lenses is to define two functions that map between two sets of
+data. We usually talk about these sets being the Source ($S$) and the View ($V$):
+a lens then consists of two functions \(\mathit{get} : S \rightarrow V\) and
+\(\mathit{put} : V \rightarrow S\). Together with these functions, a lens has to fulfil a number of
+lens laws to guarantee soundness in the context of a round-trip: of retrieving a particular
+view, modifying it and feeding it back into the source. One can see how 
+lenses are applicable here, as we have a source set of variational software and a
+view containing a subset of the code. However the work of St{\u{a}}nciulescu has two limitations. First, the
+lens laws have not been proven for the method described in it. As we will show, even one of the lens laws does not hold for it.
+The second limitation is in one of their functions of the lens: it is not possible to feed the changes
+back into the source that should not influence the retrieved projection. Intuitively, when a developer creates a view based on a configuration and then modifies the view (i.e., evolves the source code), it is not possible to let the change apply to more variants than are in the view.
+
+In the present work, we aim to overcome these limitations by presenting \emph{Variational Lenses}, a framework for view-based editing of variational code. We provide definitions for the \emph{get} and a \emph{put} functions with as few limitations as possible. As we will demonstrate with a 
+counterexample, support for completely unrestricted editing is not possible without
+losing soundness guarantees. Furthermore, we will give a specific and realistic
+condition to enable soundness guarantees, which we will formally prove.
+We will also see that while the previous
+method does not have this restriction, it should have it in order to adhere to the
+same law. 
+
+To provide our definition and proofs, we rely on a variability management
+framework called Virtual Platform. The Virtual Platform is a development system
+that aims to bridge the gap between the opposing strategies \emph{\co} and
+an integrated platform~\cite{mahmood2021}.
+%Bridging this gap is important, since a ``big bang'' transition is costly~\cite{stallinger2011migrating}.
+We chose to build our definitions on the Virtual Platform, since it provides a suitable abstraction of
+variational code, with conceptual structures and operations supporting several 
+different programming languages.
+To formalise the operators, we first needed to formalise the relevant parts of the 
+Virtual Platform. After formalising the operators, we developed a
+definition of \emph{Variational Lenses}. This type of lens is able to carry
+configuration data with it to support the functions we created. This new type of
+lens is needed, as existing lenses are not able to carry configuration information
+with them. The functions we created are then proved to comply with the lens laws 
+of this new lens. Lastly, we evaluate our new formalisation and implementation of view-based editing
+based on a real-world version history from~\cite{stuanciulescu2016}. In this evaluation,
+we will see that the new method can do at least as much as the previous method
+while complying with the lens laws. 
+
+In summary, we contribute:
+\begin{enumerate}
+    \item A formalisation of a part of the Virtual Platform, to generically describe variational lenses.
+    \item A formalisation of view-based editing in terms of the formalisation of the Virtual Platform that allows for more flexibility than the previous method.
+    \item A formalisation of Variational Lenses together with the relevant lens laws.
+    \item A proof that the view-based editing adheres to the lens laws.
+    \item An evaluation of the method using real-world data extracted from, and a comparison to the method by, Stanciulescu et al.~\cite{stuanciulescu2016}.
+    \item An implementation of the operators in the Virtual Platform\footnote{\url{https://bitbucket.org/easelab/2022-vp-lenses}}.
+\end{enumerate}

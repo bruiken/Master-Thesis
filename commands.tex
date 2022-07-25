@@ -1,0 +1,108 @@
+% general 
+\newcommand{\grammarDefinedAs}{::=}                      % ::=             For use in grammars
+\newcommand{\binaryFunc}[3]{#1 \times #2 \rightarrow #3} % e1 x e2 -> e3   Binary function type def
+\newcommand{\optional}[1]{\lceil #1 \rceil}              % Ceiling of some type used to denote an optional value
+\newcommand{\unaryFunc}[2]{#1 \rightarrow #2}            % e1 -> e2        Single argument functions
+\newcommand{\powerset}[1]{\mathcal{P} \left(#1\right) }  % Powerset
+\newcommand{\sat}{\textit{SAT}}                          % SAT
+\newcommand{\ternaryFunc}[4]{#1 \times #2 \times #3 \rightarrow #4} % e1 x e2 x e3 -> e4
+
+% commands for defining choice calculus semantics
+\newcommand{\roseTree}[3]{#1<#2, \dots, #3>}             % a<e1,..., e2>   Defining rose trees
+\newcommand{\ccChoice}[3]{#1\left<#2, #3\right>}         % D<e, e>         Choice calculus: choice
+\newcommand{\ccApply}[2]{\lfloor #1 \rfloor_{#2}}        % floor notation for choice calculus selection, partial config, etc. 
+
+% commands for defining virtual platform
+\newcommand{\assettype}{{\sf Types}}                     % Asset types
+\newcommand{\assetroottype}{{\sf Root}}                  %  - Root type
+\newcommand{\assetrepositorytype}{{\sf Repository}}      %  - Repository type
+\newcommand{\assetfoldertype}{{\sf Folder}}              %  - Folder type
+\newcommand{\assetfiletype}{{\sf File}}                  %  - File type
+\newcommand{\assetclasstype}{{\sf Class}}                %  - Class type
+\newcommand{\assetmethodtype}{{\sf Method}}              %  - Method type
+\newcommand{\assetfieldtype}{{\sf Field}}                %  - Field type
+\newcommand{\assetblocktype}{{\sf Block}}                %  - Block type
+\newcommand{\features}{\mathcal{F}}                      % Denote features with a symbol
+\newcommand{\featureinstance}{{\sf feature}}             % sansfont "feature" to denote one feature
+\newcommand{\expressions}[1]{Exp \left( #1 \right)}      % expression definition
+\newcommand{\notfeature}[1]{\neg #1}                     % !e for some expression
+\newcommand{\truefeature}{{\sf True}}                    % True for use in expressions
+\newcommand{\falsefeature}{{\sf False}}                  % False for use in expressions
+\newcommand{\binopsymbol}{\otimes}                       % Only the symbol for binary operators
+\newcommand{\binopfeature}[2]{#1 \otimes #2}             % Binary operator for expressions
+\newcommand{\binopand}{\land}                            % and
+\newcommand{\binopor}{\lor}                              % or
+\newcommand{\binopimplies}{\Rightarrow}                  % implies
+\newcommand{\featuremodel}{{\sf featuremodel}}           % Feature models
+\newcommand{\assetcontents}{\mathcal{C}}                 % Set containing all possible asset contents
+\newcommand{\namefunc}{{\sf Name}}                       % Name function for assets
+\newcommand{\parentfunc}{{\sf Parent}}                   % Parent function for assets
+\newcommand{\typefunc}{{\sf Type}}                       % Asset type function for assets
+\newcommand{\featuremodelfunc}{{\sf FM}}                 % Feature model function for assets
+\newcommand{\presenceconditionfunc}{{\sf PC}}            % Presence condition function for assets
+\newcommand{\contentfunc}{{\sf Content}}                 % Content function for assets
+\newcommand{\closestfmfunc}{{\sf ClosestFM}}             % Function for the closest feature model (ancestors)
+\newcommand{\vpgetfunc}{{\sf Get}}                       % Get function on the VP
+\newcommand{\childrenfunc}{{\sf Children}}               % Function to get children of an asset
+\newcommand{\allassets}{\mathcal{A}}                     % Symbol to denote all assets
+\newcommand{\allidentities}{\mathcal{I}}                 % Symbol to denote all identities
+\newcommand{\virtualplatformtype}{\mathcal{V}}           % Symbol to denote VP type
+\newcommand{\findparentsfunc}{{\sf FindParents}}         % Find parents, same as parents but multiple results
+\newcommand{\foldfmfunc}{{\sf FoldFMs}}                  % Fold ancestor feature models function
+\newcommand{\filterchildrenfunc}{{\sf Prune}}            % Filter children function for get operator
+\newcommand{\contentequiv}{{\equiv_{\assetcontents}}}    % Equivalence relation between contents
+\newcommand{\oldassets}{\allassets_{\it old}}            % To denote the list of assets just before applying the get operator
+\newcommand{\newassets}{\allassets_{\it new}}            % To denote the list of assets that we want to /put/ back
+\newcommand{\findassetsfunc}{{\sf FindAssets}}           % Function to find assets by their name/identity
+\newcommand{\findnewasset}{{\sf FindNew}}                % Function to find new asset by its identity
+\newcommand{\findoldasset}{{\sf FindOriginal}}           % Function to find old asset by its identity
+\newcommand{\assetpartialorder}{<_{\allassets}}          % partial order placed on assets
+\newcommand{\foldpcfunc}{{\sf FoldPCs}}                  % Fold ancestor presence conditions
+\newcommand{\flattenassetchildren}{{\sf FlattenChildren}}% Function to flatten children of an asset into one set
+
+% commands for lenses
+\newcommand{\getput}{\textsc{GetPut}}                    % GetPut law
+\newcommand{\putget}{\textsc{PutGet}}                    % PutGet law
+\newcommand{\createget}{\textsc{CreateGet}}              % CreateGet law
+
+% commands for tikz trees
+% \treethree{treename}{x}{y}{rootname}{c1name}{c2name}{c3name}{c1pc}{c2pc}{c3pc}
+\newcommand{\treethree}[9]{%
+\node[] (#1R) at (#2, #3) {#4};%
+\node[] (#1A1) at (#2-1,#3-1) {#5};%
+\node[] (#1A2) at (#2,#3-1) {#6};%
+\node[] (#1A3) at (#2+1,#3-1) {#7};%
+\draw[] (#1R) -- (#1A1.north) node [midway, left, yshift=1mm] {#8};%
+\draw[] (#1R) -- (#1A2.north) node [midway, right, xshift=-1mm] {#9};%
+\node[] (#1AN) at (#2, #3+0.2) {};%
+\node[] (#1AE) at (#2+1, #3-0.5) {};%
+\node[] (#1AS) at (#2, #3-1.2) {};%
+\node[] (#1AW) at (#2-1, #3-0.5) {};%
+\ftreethree{#1}%
+}
+\newcommand{\ftreethree}[2]{%
+\draw[] (#1R) -- (#1A3.north) node [midway, right, yshift=1mm] {#2};%
+}
+
+% \treetwo{treename}{x}{y}{rootname}{c1name}{c2name}{c1pc}{c2pc}
+\newcommand{\treetwo}[8]{%
+\node[] (#1R) at (#2, #3) {#4};%
+\node[] (#1A1) at (#2-0.5,#3-1) {#5};%
+\node[] (#1A2) at (#2+0.5,#3-1) {#6};%
+\draw[] (#1R) -- (#1A1.north) node [midway, left] {#7};%
+\draw[] (#1R) -- (#1A2.north) node [midway, right] {#8};%
+\node[] (#1AN) at (#2, #3+0.2) {};%
+\node[] (#1AE) at (#2+0.7, #3-0.5) {};%
+\node[] (#1AS) at (#2, #3-1.2) {};%
+\node[] (#1AW) at (#2-0.7, #3-0.5) {};%
+}
+
+% \treeone{treename}{x}{y}{rootname}{c1name}{c1pc}
+\newcommand{\treeone}[6]{%
+\node[] (#1R) at (#2, #3) {#4};%
+\node[] (#1A1) at (#2,#3-1) {#5};%
+\draw[] (#1R) -- (#1A1.north) node (#1AW) [midway, left] {#6};%
+\node[] (#1AN) at (#2, #3+0.2) {};%
+\node[] (#1AE) at (#2+0.2, #3-0.5) {};%
+\node[] (#1AS) at (#2, #3-1.2) {};%
+}
