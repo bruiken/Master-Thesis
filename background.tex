@@ -120,38 +120,99 @@ source.
   \label{fig:lens:overview}
 \end{figure}
 
-\section*{Current State of Research}
+\section{Current State of Research}
 The most closely related work to ours is by St{\u{a}}nciulescu et al., which is
 also a view-based editing method~\cite{stuanciulescu2016}. Their system is
-defined in the formalisation of variational software called \emph{Choice Calculus}~\cite{walkingshaw2014}.
+defined in the formalisation of variational software called \emph{Choice Calculus}~\cite{walkingshaw2014}
+and also uses the concept of lenses.
 Choice calculus abstracts away the notation of \texttt{\#ifdef} statements into
-a more formal syntax to simplify the definitions. A choice is then represented
-using \(F \left<e_1, e_2\right>\), where $F$ is the presence condition of an
-expression, $e_1$ is the expression that is executed when $F$ holds and $e_2$
-the expression that is executed when $F$ does not hold. Our work will not be 
+a more formal syntax to simplify the definitions. Our work will not be 
 based on choice calculus, but rather on the conceptual structures of the Virtual
-Platform.
+Platform. We will still take a closer look at how this method works because we are
+going to compare to this method in the evaluation (Section~\ref{sec:evaluation}).
 
-In this previous work, the \emph{get} operator requires a \emph{choice}, with
-which the programmer determines the set of variants included in the view (expressed
-in terms of activated and deactivated features).
+Choice Calculus is a way to abstract variational source code into a more consise
+format~\cite{erwig2011choice}. Figures~\ref{fig:representations:sourcecode} and 
+\ref{fig:representations:choicecalculus} show how a piece of variational source
+code is represented using choice calculus. In the first subfigure, we see the source
+code, where \texttt{a} is guarded by the feature \texttt{F}. If \texttt{F} does not
+hold, then we want \texttt{b} to be active. In the second subfigure we see this
+represented in the choice calculus. We again see the feature $F$ and the codes $a$
+and $b$. The representation means that if $F$ is true, we pick $a$, otherwise we
+pick $b$. If an \texttt{\#ifdef} does not contain an \texttt{\#else} statement,
+the second argument of the choice can be replaced by an empty line of code. For
+example, removing the \emph{else} clause from our example would give us \(\mathit{F}\!\left<a, \iota\right>\).
+The $b$ line is now removed and replaced by \(\iota\). 
+
+\begin{figure}
+  \centering
+  \begin{subfigure}[b]{0.4\textwidth}
+    \centering
+    \begin{BVerbatim}
+#ifdef F
+  a
+#else
+  b
+#endif
+    \end{BVerbatim}
+    \caption{Source code}
+    \label{fig:representations:sourcecode}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.4\textwidth}
+    \centering
+    \(\mathit{F}\!\left<a,b\right>\)
+    \caption{Choice calculus}
+    \label{fig:representations:choicecalculus}
+  \end{subfigure}
+  \caption{Different representations of variational source code.}
+  \label{fig:representations}
+\end{figure}
+
+In the previous work which was also based on lenses, the \emph{get} operator 
+requires a \emph{choice}. With this \emph{choice}, the programmer determines 
+the set of variants included in the view (expressed in terms of activated and
+deactivated features). In our example of Figure~\ref{fig:representations:choicecalculus},
+a choice of $F$ would yield just $a$, instead of the full choice. The negation of
+$F$ (\(\neg\mathit{F}\)) would give just $b$. If $F$ is not decided on by the choice,
+the choice block remains in full.
+
 The \emph{put} operator requires another expression, called the \emph{ambition}.
 The ambition is a way for the programmer to determine the set of variants to
 which the changes should be applied. The way the \emph{put} operator deals with
 this ambition, is by creating a new top-level choice (a representation of an
-\texttt{\#ifdef}) in the form of \( \left(c \land a\right)\left<v', s\right> \).
+\texttt{\#ifdef}) in the form of \( \left(c \land a\right)\!\left<v', s\right> \).
 Here, $c$ and $a$ are the chosen choice and ambition in the \emph{get} and
 \emph{put} operators, $v'$ is the edited view and $s$ is the source from which
 the view originated. This top-level choice is then minimised such that the
-common parts are extracted from both branches.
+common parts are extracted from both branches. Let us take for example the choice
+calculus expression from Figure~\ref{fig:representations:choicecalculus} and apply
+the \emph{get} operator with as choice $F$. We already know this results in just $a$
+as the source code. We as the programmer now decide to change this to $c$. To push
+these changes back into the original source code, we use the \emph{put} operator.
+As the ambition, we again choose $F$, resulting in the choice calculus expression of
+\(\mathit{\left(F \land F\right)}\!\left<c,\mathit{F}\!\left<a,b\right>\right>\).
+We can simplify this expression in two ways: firstly, we can simplify the first 
+choice expression by replacing \(\mathit{F} \land \mathit{F}\) to just \(\mathit{F}\).
+Secondly, we can replace the \(\mathit{F}\!\left<a,b\right>\) by $b$, since we know
+that $F$ does not hold in this part of the first choice level.
 
-The limitations of this work, as mentioned before, are twofold. The method
-is not proven to be correct with the lens laws. The way the \emph{put}
-operator works, does not allow changes to be propagated to a scope beyond
+The limitations of the previous work, as mentioned before, are twofold. Firstly, the
+method is not proven to be correct with the lens laws. This means that we cannot strictly
+say that the method uses lenses. More importantly, we cannot ensure the round-tripping
+properties that lenses want to ensure. Moreover, we will later give a counterexample
+that disproves one of the lens laws for the previous work. The second limitation of the
+previous work is the way the \emph{put}
+operator works. It does not allow changes to be propagated to a scope beyond
 the \emph{choice} expression from the \emph{get} operator. This was a
 deliberate design choice as it holds to the \emph{Edit Isolation Principle},
-where changes can only be made to what is visible in the view. In this work,
-we want to lift this restriction, as well as prove the lens laws.
+where changes can only be made to what is visible in the view. To see how this works,
+let us look at Figure~\ref{fig:representations:sourcecode}. If we create a view with
+only feature \texttt{F}, we result in a view with just \texttt{a}. Now the \emph{Edit Isolation Principle}
+says that we cannot make any edits such that any of the left out code can be changed.
+In this case this means that we cannot make changes to the code in \texttt{b}. 
+This work aims to lift the above two limitations, we want to create a method in which
+the \emph{Edit Isolation Principle} is lifted and for which we can prove the lens laws.
 
 \section{Running Example}\label{sec:background:example}
 In this work, we will generally use the sample example system to show the workings of
@@ -161,3 +222,63 @@ embedded in one file. Our system has two features, namely an optional \emph{CLI}
 enabled, guarded by a feature model. In the end, we want to be able for a developer
 to work only on a part of the file, and then be able to also push these changes
 back into the full source file.
+
+An example of how this source code might look can be found in Figure~\ref{fig:runningexample}.
+We first what the entire source code looks like in Figure~\ref{fig:example:original}.
+As explained before, we have one base class that is not locked behind a feature and two
+classes that are locked behind the \emph{CLI} and \emph{logging} feature, respectively.
+To show why projectional editing can be beneficial, see Figure~\ref{fig:example:view}.
+In this view we have left out the \emph{logging} feature and have selected the \emph{CLI}
+feature. We can see this, as the \emph{CLI} feature is not surrounded by \texttt{\#ifdef}
+statements, and the \emph{logging} feature is left out altogether. The view is easier to
+edit for a developer, as there is fewer code. The benefits seem marginal here, but one
+can imagine that within the classes \texttt{Base} and \texttt{CLI}, there might be specific
+code for the other features as well, which would also become less complex in the view.
+
+\begin{figure}
+  \centering
+  \begin{subfigure}[b]{0.45\textwidth}
+    \centering
+    \begin{BVerbatim}
+public class Base
+{
+  ...
+}
+
+#ifdef CLI
+public class CLI
+{
+  ...
+}
+#endif
+
+#ifdef logging
+public class logging
+{
+  ...
+}
+#endif
+    \end{BVerbatim}
+    \caption{Original example source code.}
+    \label{fig:example:original}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.45\textwidth}
+    \centering
+    \begin{BVerbatim}
+public class Base
+{
+  ...
+}
+
+public class CLI
+{
+  ...
+}
+    \end{BVerbatim}
+    \caption{Example view of example source code.}
+    \label{fig:example:view}
+  \end{subfigure}
+  \caption{Running example source code.}
+  \label{fig:runningexample}
+\end{figure}

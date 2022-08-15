@@ -110,7 +110,11 @@ This tuple consists of the assets, the features, the identities and the contents
 \begin{figure}
   \centering
   \begin{tikzpicture}
+    \node[] (ROO) at (0,2) {$\mathit{root}$};
+    \node[] (REP) at (0,1) {$\mathit{repo}$};
     \treethree{OS}{0}{0}{$f_1$}{$c_1$}{$c_2$}{$c_3$}{}{$\mathit{CLI}$}{$\mathit{logging}$}
+    \draw[] (ROO.south) -- (REP.north);
+    \draw[] (REP.south) -- (OSAN);
   \end{tikzpicture}
   \caption{The example system in the form of an asset tree.}
   \label{fig:example:basicsystem}
@@ -128,10 +132,13 @@ available when the \emph{CLI} feature is activated, so we create a feature model
 defined by \( \mathit{fm} = \mathit{logging} \binopimplies \mathit{CLI} \).
 With this last piece of information we can create the actual assets of the system:
 \[
-  \begin{array}{ll}
-    a_1 = \left( c_1, \assetclasstype, \emptyset, \bot, \truefeature, s_1 \right) & a_4 = \left( f_1, \assetfiletype, \left\{ a_1, a_2, a_3 \right\}, \bot, \truefeature, s_4 \right) \\
-    a_2 = \left( c_2, \assetclasstype, \emptyset, \bot, \mathit{CLI}, s_2 \right) & a_5 = \left( r_1, \assetrepositorytype, \left\{ a_4 \right\}, \bot, \truefeature, s_5 \right)\\
-    a_3 = \left( c_3, \assetclasstype, \emptyset, \bot, \mathit{logging}, s_3 \right) & a_6 = \left( t_1, \assetroottype, \left\{ a_5 \right\}, \mathit{fm}, \truefeature, s_6 \right)
+  \begin{array}{l}
+    a_1 = \left( c_1, \assetclasstype, \emptyset, \bot, \truefeature, s_1 \right) \\
+    a_2 = \left( c_2, \assetclasstype, \emptyset, \bot, \mathit{CLI}, s_2 \right) \\
+    a_3 = \left( c_3, \assetclasstype, \emptyset, \bot, \mathit{logging}, s_3 \right) \\
+    a_4 = \left( f_1, \assetfiletype, \left\{ a_1, a_2, a_3 \right\}, \bot, \truefeature, s_4 \right) \\
+    a_5 = \left( r_1, \assetrepositorytype, \left\{ a_4 \right\}, \bot, \truefeature, s_5 \right) \\
+    a_6 = \left( t_1, \assetroottype, \left\{ a_5 \right\}, \mathit{fm}, \truefeature, s_6 \right)
   \end{array}
 \]
 We can see that there are only two non-trivial presence conditions, namely in
@@ -145,8 +152,12 @@ ordered such that \(a_1 \assetpartialorder a_2 \assetpartialorder a_3 \).
 The asset tree can also be seen in Figure~\ref{fig:example:basicsystem}. This
 format is what we will use throughout this work. We have the identities of the
 assets as nodes, and the children of these nodes are connected using edges. The edges
-are labelled with the presence conditions of the children, but if there is a
-non-trivial presence condition.
+are labelled with the presence conditions of the children, but only if there is a
+non-trivial presence condition (if it is not \(\truefeature\)). We can easily see the
+hierarchy in this format, we first have the root, then the repository, followed by
+the file, which contains three classes. We see the two non-trivial presence conditions
+in the labels of the edges from $f_1$ to $c_2$ and $f_1$ to $c_3$. One thing to note is
+that feature models are not present in this representation. 
 
 \section{Parent Functions}\label{sec:vp:parentsfunctions}
 Next, we will define a number of functions to find the parent of an asset.
@@ -176,6 +187,24 @@ one parent (or none):
     \end{array}
   \right.
 \]
+
+\begin{example}[Continutation of Example \ref{example:basicsystem}]\label{example:parentfunc}
+  Let us take a look at how the parent functions work in terms of the example
+  system we defined before.
+
+  \[
+    \begin{array}{ll}
+      \findparentsfunc\left(a_1\right) = \left\{ a_4 \right\} & \parentfunc\left(a_1\right) = a_4 \\
+      \findparentsfunc\left(a_4\right) = \left\{ a_5 \right\} & \parentfunc\left(a_4\right) = a_5 \\
+      \findparentsfunc\left(a_6\right) = \emptyset & \parentfunc\left(a_6\right) = \bot \\
+    \end{array}
+  \]
+
+  As we can see, the \(\findparentsfunc\) should always give back either an empty set, or
+  a singleton set. Otherwise, the \(\parentfunc\) cannot give a sensible singular asset.
+  We still create these two function separately, as we can handily use the first function
+  in the restrictions we will define next.
+\end{example}
 
 \section{Restrictions}\label{sec:vp:restrictions}
 In this section, we introduce several restrictions to a Virtual Platform
@@ -321,20 +350,26 @@ operator. We create two definitions, the first of which describes the full
 operator. The second definition (\(\filterchildrenfunc\)) is used as a helper
 function that applies the same general idea but it works on a set of assets.
 
-\[
-  \begin{array}{c}
-    \vpgetfunc\left( a, e \right) = 
-      \left\{
-        \begin{array}{ll}
-          \left( \namefunc(a), \typefunc(a), \filterchildrenfunc(a, e \land \mathit{fm}'), \mathit{fm}', \presenceconditionfunc(a), \contentfunc(a) \right) & \text{if } e \land \mathit{fm}' \in \sat \\
-          \bot & \text{otherwise}
-        \end{array}
-      \right. \\
-      \text{where }\mathit{fm}' = \foldpcfunc\left(a\right) \optional{\land} \foldfmfunc\left(a\right)
-  \end{array}
-\]
+\begin{center}
+  \makebox[0cm]{
+  \(
+    \begin{array}{c}
+      \vpgetfunc\left( a, e \right) = 
+        \left\{
+          \begin{array}{ll}
+            \left( \namefunc(a), \typefunc(a), \filterchildrenfunc(a, e \land \mathit{fm}'), \mathit{fm}', \presenceconditionfunc(a), \contentfunc(a) \right) & \text{if } e \land \mathit{fm}' \in \sat \\
+            \bot & \text{otherwise}
+          \end{array}
+        \right. \\
+        \text{where }\mathit{fm}' = \foldpcfunc\left(a\right) \optional{\land} \foldfmfunc\left(a\right)
+    \end{array}
+  \)
+  }
+\end{center}
 
-\[
+\begin{center}
+  \makebox[0cm]{
+  \(
   \begin{array}{c}\def\arraystretch{1.4}
     \filterchildrenfunc : \binaryFunc{\allassets}{\expressions{\features}}{\powerset{\allassets}} \\
     \def\arraystretch{1}
@@ -355,7 +390,9 @@ function that applies the same general idea but it works on a set of assets.
     \text{where }\mathit{check} = \presenceconditionfunc\left( c' \right) \land e \land \featuremodelfunc\left(c'\right)\text{,} \\
     \text{and }a = \left( n, t, \_, fm, pc, c \right)
   \end{array}
-\]
+  \)
+  }
+\end{center}
 
 We see that, on the asset that the operator is applied, we change the feature
 model to include all of the ancestor presence conditions and feature models.
@@ -370,35 +407,106 @@ the \(\filterchildrenfunc\). We do this because we know when going into
 recursive calls, that these presence conditions and feature models must be
 satisfiable, otherwise the current asset would not be in the result.
 
-\begin{example}[Continutation of Example \ref{example:basicsystem}]\label{example:getoperator}
-We keep working on the previous example, now we will apply the \emph{get}
-operator on the defined asset tree. We look at an application where our choice is the
-negation of the \emph{CLI} feature. For simplicity, this \emph{get} operations will
-not be called on the root of the tree ($a_6$) but on the file asset ($a_4$).
-\end{example}
 \begin{figure}
   \centering
-  \begin{tikzpicture}
-    \treethree{OS}{0}{0}{$f_1$}{$c_1$}{$c_2$}{$c_3$}{}{$\mathit{CLI}$}{$\mathit{logging}$}
-    \treeone{OV}{0}{-2.5}{$f'_1$}{$c_1$}{}
-    \path[] (OSAS) edge[double,-Stealth] node[left] {$\mathit{get}\left(f_1, \neg\mathit{CLI}\right)$} (OVAN);
-  \end{tikzpicture}
-  \caption{Example application of the \emph{get} operator with a non-trivial choice.}
-  \label{fig:example:get2}
+  \begin{subfigure}[b]{0.45\textwidth}
+    \centering
+    \begin{tikzpicture}
+      \node[] (ROO) at (0,2) {$\mathit{root}$};
+      \node[] (REP) at (0,1) {$\mathit{repo}$};
+      \treethree{OS}{0}{0}{$f_1$}{$c_1$}{$c_2$}{$c_3$}{}{$\mathit{CLI}$}{$\mathit{logging}$}
+      \draw[] (ROO.south) -- (REP.north);
+      \draw[] (REP.south) -- (OSAN);
+      \treethree{OV}{0}{-2.5}{$f'_1$}{$c_1$}{$c_2$}{$c_3$}{}{$\mathit{CLI}$}{$\mathit{logging}$}
+      \path[] (OSAS) edge[double,-Stealth] node[left] {$\mathit{get}\left(f_1, \truefeature\right)$} (OVAN);
+    \end{tikzpicture}
+    \caption{\(\text{Choice} = \truefeature\)}
+    \label{fig:example:get1}
+  \end{subfigure}
+  \hfill
+  \begin{subfigure}[b]{0.45\textwidth}
+    \centering
+    \begin{tikzpicture}
+      \node[] (ROO) at (0,2) {$\mathit{root}$};
+      \node[] (REP) at (0,1) {$\mathit{repo}$};
+      \treethree{OS}{0}{0}{$f_1$}{$c_1$}{$c_2$}{$c_3$}{}{$\mathit{CLI}$}{$\mathit{logging}$}
+      \draw[] (ROO.south) -- (REP.north);
+      \draw[] (REP.south) -- (OSAN);
+      \treeone{OV}{0}{-2.5}{$f'_1$}{$c_1$}{}
+      \path[] (OSAS) edge[double,-Stealth] node[left] {$\mathit{get}\left(f_1, \neg\mathit{CLI}\right)$} (OVAN);
+    \end{tikzpicture}
+    \caption{\(\text{Choice} = \neg\mathit{CLI}\)}
+    \label{fig:example:get2}
+  \end{subfigure}
+  
+  \caption{Applications of the \emph{get} operator on the running example.}
+  \label{fig:example:get}
 \end{figure}
-Again, we call the \emph{get} operator applied to the file asset, with \(\neg\mathit{CLI}\)
-as the choice expression: we want to look at the result of \(\vpgetfunc\left(a_4, \neg\mathit{CLI}\right)\).
-The result of this application can be seen in Figure~\ref{fig:example:get2}. We see that
-the root of the result is now called $f'_1$, this is different because the feature model from
-the root is now included in this asset because of the \(\foldfmfunc\), this is the only change
-made, as there were no presence conditions to fold with the \(\foldpcfunc\). We also
-see that two class assets have been removed from the result. One of these is
-obvious, as its presence condition was \emph{CLI}, while we want to have the
-negation of it in the result. The other one is because the \emph{logging} feature
-requires the \emph{CLI} feature, as stated in the feature model. The checks done are
-then are the following: for $a_1$ and $a_4$, we check if \( \mathit{fm} \land \neg\mathit{CLI} \in \sat \),
-for $a_2$, we have that \( \mathit{fm} \land \mathit{CLI} \land \neg\mathit{CLI} \not\in \sat \),
-hence its absence in the result, this is the same for $a_3$, for which we have that \(\mathit{fm} \land \mathit{logging} \land \neg\mathit{CLI} \not\in \sat\).
+
+\begin{example}[Continutation of Example \ref{example:basicsystem}]\label{example:getoperator}
+We keep working on the previous example, now we will apply the \emph{get}
+operator on the then defined asset tree. We will look at two applications, where our choice are
+firstly the trivial choice, and secondly the negation of the \emph{CLI} feature.
+For simplicity, this \emph{get} operations will not be called on the root of the tree ($a_6$)
+but on the file asset ($a_4$). Asset $a_5$ and $a_6$ are not as interesting, as they both only
+have one child.
+
+We start with the application where we use the trivial choice. This example can be seen in
+Figure~\ref{fig:example:get1}. As expected, we see the result is equal to the tree that we
+apply the operator on, except that our file asset is now called $f'_1$ instead of $f_1$.
+The reason for this is that this asset now contains its previously ancestral feature models
+and presence conditions. These are added by the operator using the \(\foldfmfunc\) and
+\(\foldpcfunc\) functions. Since there are no presence conditions in the tree above $f_1$,
+\(\foldpcfunc\left(a_4\right) = \truefeature\). There is a feature model in the tree, however.
+This means that we get that \(\foldfmfunc\left(a_4\right) = \mathit{fm}\). This means that we
+already know that $f'_1$ differs from $f_1$ by the feature model \(\mathit{fm}\). Let us now
+look into what checks are done by the \emph{get} operator to decide which assets should be in
+the result:
+\begin{itemize}
+  \item For $a_4$ (labelled by $f_1$): \(\mathit{fm}\in\sat\). The check should contain the
+        choice conjucted with the feature model and presence condition of the asset. The choice
+        is trivial and can thus be omitted, the feature model is equal to \emph{fm}.
+  \item For $a_1$ (labelled by $c_1$): \(\mathit{fm}\in\sat\). The same holds here as for $a_4$,
+        as $a_1$ does not have any presence condition or feature model attached to it.
+  \item For $a_2$ (labelled by $c_2$): \(\mathit{CLI} \land \mathit{fm} \in \sat\). The inclusion
+        of the feature model has the same reason as above. This time we also have included the
+        \emph{CLI} feature, as it is the presence condition of $a_2$.
+  \item For $a_3$ (labelled by $c_3$): \(\mathit{logging} \land \mathit{fm} \in \sat\). Similarly
+        to $a_2$, except that we have a different presence condition (\emph{logging} instead of
+        \emph{CLI}).
+\end{itemize}
+Since all of these checks succeed, all of the assets from $a_4$ downwards are included in the
+result.
+
+For our second example, we apply the \emph{get} operator with a non-trivial choice, it being
+the negation of the \emph{CLI} feature (\(\neg\mathit{CLI}\)). We again apply it on $a_4$, the
+result can be seen in Figure~\ref{fig:example:get2}. Since we apply the operator on the same
+asset as before, we can copy over the results of the \(\foldfmfunc\) and \(\foldpcfunc\)
+functions. This time, we see that we are missing both $c_2$ and $c_3$ in the result. The first
+one seems obvious: its presence condition is \emph{CLI}, and we have the negation of that as our
+choice. The second one is actually missing because of our feature model, which says that
+\emph{logging} can only co-exist with the \emph{CLI} feature. The checks done by the \emph{get}
+operator then look as follows (remember that \(\mathit{fm}\) is defined by
+\(\mathit{logging} \Rightarrow \mathit{CLI}\):
+
+\begin{itemize}
+  \item For $a_4$ (labelled by $f_1$): \(\neg\mathit{CLI} \land \mathit{fm}\in\sat\).
+        The check should contain the choice conjucted with the feature model and presence condition
+        of the asset. The choice is the negation of the \emph{CLI} feature, and the feature model
+        is equal to \emph{fm}.
+  \item For $a_1$ (labelled by $c_1$): \(\neg\mathit{CLI} \land \mathit{fm}\in\sat\). The same holds
+        here as for $a_4$,
+        as $a_1$ does not have any presence condition or feature model attached to it.
+  \item For $a_2$ (labelled by $c_2$): \(\neg\mathit{CLI} \land \mathit{CLI} \land \mathit{fm} \not\in \sat\).
+        The inclusion of the feature model has the same reason as above. This time we also have included the
+        \emph{CLI} feature, as it is the presence condition of $a_2$. This leads to a problem as \(\mathit{CLI}\) and \(\neg\mathit{CLI}\) cannot be satisfied.
+  \item For $a_3$ (labelled by $c_3$): \(\neg\mathit{CLI} \land \mathit{logging} \land \mathit{fm} \not\in \sat\). Similarly
+        to $a_2$, except that we have a different presence condition (\emph{logging} instead of
+        \emph{CLI}). This also leads to an unsatisfiable situation, as our feature model says that
+        \emph{CLI} is implied by \emph{logging}. In this case, \emph{logging} holds yet \emph{CLI} does not.
+\end{itemize}
+Because of the unsatisfiability of assets $a_2$ and $a_3$, they are not present in the result.
+\end{example}
 
 \section{Put Operator}\label{sec:vp:putoperator}
 In this section, we will introduce the semantics for the put operator for the
