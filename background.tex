@@ -57,6 +57,14 @@ at all. The Virtual Platform uses a \emph{Trace Database}, which keeps track of
 clones of assets through the asset tree, this together with the versions of assets
 and features can be used to propagate changes between clones.
 
+The Virtual Platform already contains numerous operators to work on the internal
+structures. The two operators we will add, work alongside the existing operators.
+This means that we do not have to keep in mind how they might interact with the
+internal structures. Our new operators are special in the way that they have a
+necessary order in which they can be used, the \emph{put} must be used after the
+\emph{get}, and the \emph{get} operator can only be used while there is no `active'
+clone in progress.
+
 For this work, the most important structures are the assets and the features.
 We do not need to formalise the notion of the trace database or the versions as
 our new operators will not use these. In our formalisation, we also abstract the
@@ -66,7 +74,8 @@ name.
 
 \section{Lenses}\label{sec:background:lenses}
 A lens \(l\) is a mapping between a set \(C\) of ``concrete''
-structures and a set \(A\) of ``abstract'' structures, consisting of
+structures (also called \emph{sources}) and a set \(A\) of ``abstract'' structures 
+(also called \emph{views}), consisting of
 three functions \emph{get}, \emph{put} and \emph{create}~\cite{foster2007}. The \emph{get}
 function takes a concrete structure and yields an abstract structure. The
 \emph{put} function does the reverse: it takes an abstract structure combined
@@ -93,13 +102,13 @@ and stability (\getput):
 \]
 How all of these definitions work together can best be seen in the form of
 the schema shown in Figure~\ref{fig:lens:overview}. Here we can see two
-sources $s$ and $s'$, connected by the \emph{get} and \emph{put} functions.
-The views $v$ is the result of applying \emph{get} to the source $s$ and $v'$
+concrete structures $s$ and $s'$, connected by the \emph{get} and \emph{put} functions.
+The abstract structure $v$ is the result of applying \emph{get} to the source $s$ and $v'$
 is the view that results from the edits made to $v$. We see a dashed line back
 to $s$ from $v$, this represents the \getput~law. A similar dashed line can be
 seen from $s'$ to $v'$, this represents the \putget~law. We of course also have
 an arrow from $v'$ to $s'$, showing how to finish the loop towards the new
-source.
+concrete structure.
 
 \begin{figure}
   \centering
@@ -122,7 +131,7 @@ source.
 
 \section{Current State of Research}
 The most closely related work to ours is by St{\u{a}}nciulescu et al., which is
-also a view-based editing method~\cite{stuanciulescu2016}. Their system is
+a view-based editing method~\cite{stuanciulescu2016} as well. Their system is
 defined in the formalisation of variational software called \emph{Choice Calculus}~\cite{walkingshaw2014}
 and also uses the concept of lenses.
 Choice calculus abstracts away the notation of \texttt{\#ifdef} statements into

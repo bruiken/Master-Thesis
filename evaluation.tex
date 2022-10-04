@@ -4,25 +4,40 @@ formalised in Section~\ref{sec:vp:formalisation}. We will perform this
 evaluation by looking at common editing operations in software systems and
 seeing how well our system applies to these operations.
 
+Note that we only referred to Section~\ref{sec:vp:formalisation} as to what this
+section will cover. This is because we only cover the formalisation of the operators
+here, not the implementation (from Section~\ref{sec:implementation}). The implementation
+is not evaluated at large, given the scale of the thesis. The evaluation that \emph{is}
+in place for the implementation are the unit tests created for it.
+
 \section{Context and Methodology}
 The editing operations we will look into are a collection of fourteen editing
 operations, structured into three groups (code-adding, code-removing and other), 
 that have been identified in~\cite{stuanciulescu2016}. These editing operations
 have been extracted from commit data from the Marlin 3D printer firmware\footnote{\url{https://github.com/MarlinFirmware/}}.
 This was a suitable repository as it is highly configurable and large (more than 140
-features and 40,000 lines of code). 
+features and 40,000 lines of code). The code-adding patterns are for adding variability (P1--P3),
+partly wrapping existing code with variability (P4 and P5), adding code without variability (P6), and
+repairing annotations (P7). Code-removing patterns exist for removing non annotated code (P8),
+removing code with variability (P9), and for repairing annotations (P10). The other patterns 
+include wrapping and unwrapping code with and from their variability (P11 and P12), changing
+presence conditions of code (P13), and moving code between different variability blocks (P14).
+Our evaluation is structured along the groups.
 
 In this evaluation, we follow the same process as St{\u{a}}nciulescu et al.: we
-take a look at every edit operation and see how our method supports them. We keep
-the same naming scheme as the operations were defined in the previous work, even
-though they are centred around \texttt{\#ifdef} statements. Because of the previous
-reasons, combined with the fact that the previous method also uses \emph{choices}
-and \emph{ambitions}, it is possible for us to then compare the applicabilities 
-of both systems to these edit operations. For our system to be usable, we
+take a look at every edit operation and see how our method supports them. Supporting in this
+context means that we can fulfill the edit operation with our definitions of the \emph{get}
+and \emph{put} operators. We will see that this comes down to picking suitable choices
+and ambitions.
+We keep the same naming scheme for the edit operations from the previous work, even
+though they are centred around \texttt{\#ifdef} statements. This is acceptable, because
+our presence conditions can be seen as \texttt{\#ifdef} statements and vice versa. This naming
+scheme also eases comparability, which we will do after applying the edit operations.
+For our system to be usable, we
 want to be able to support all of the operations. We will also take a closer look 
 at the restriction we placed on the \emph{put} operator, as we do not want it to
-restrict us from using any common edit pattern.
-\clearpage
+restrict us from using any common edit pattern. 
+
 \section{Code-Adding Patterns}
 \begin{figure}
   \centering
@@ -126,8 +141,8 @@ system as the presence conditions are embedded in the assets.
   \begin{tikzpicture}
     \treetwo{OS}{0}{0}{$r_1$}{$a_1$}{$a_2$}{$A$}{}
     \treetwo{OV}{0}{-2.5}{$r_2$}{$a_1$}{$a_2$}{$A$}{}
-    \treeone{EV}{3}{-2.5}{$r'_2$}{$a_1$}{$A$}
-    \treetwo{ES}{3}{0}{$r_3$}{$a_1$}{$a_2$}{$A$}{$A$}
+    \treeone{EV}{3.5}{-2.5}{$r'_2$}{$a_1$}{$A$}
+    \treetwo{ES}{3.5}{0}{$r_3$}{$a_1$}{$a_2$}{$A$}{$A$}
     \path[] (OVAE) edge[double,-Stealth] node[midway, below] {Manual edit} (EVAW);
     \path[] (OSAS) edge[double,-Stealth] node[left] {$\mathit{get}\left(r_1, \mathit{true}\right)$} (OVAN);
     \path[] (EVAN) edge[double,-Stealth] node[right] {$\mathit{put}\left(r'_2, \left\{ a_2 \right\}, r_1, \mathit{true}, \neg\mathit{A}\right)$} (ESAS);
@@ -180,10 +195,10 @@ to not be reliant on the \emph{choice} expression. We know that this is not poss
 hence the need for the restriction on the \emph{put} operator. But we still see an
 improvement in terms of applicability, which was already visible in Figure~\ref{fig:example:put}.
 The idea is that our definition of \emph{put} only uses the \emph{choice} expression
-in the internal check. When applying changes, it only uses the \emph{ambition} expression.
+in internal checks. When applying changes, it only uses the \emph{ambition} expression.
 This is in contrast to the previous system, where new \texttt{\#ifdef} statements were
 created with both the \emph{choice} and the \emph{ambition}. In particular, this means
-that we can create a new feature while removing certain other features from the view,
+that we can create a new feature while hiding certain other features from the view,
 as seen in the figure. If we were to apply the same strategy in the previous method, the
 new code would be added with as presence condition \(\mathit{GUI} \land \neg\mathit{CLI}\).
 This means that the new feature can only be enabled given that the \emph{CLI} feature is not.
@@ -259,9 +274,9 @@ we have edited.
     \centering
     \begin{tikzpicture}
         \node[draw,align=left] (OS) at (0,0) {\texttt{\#ifdef A} \\ \texttt{  do\_something()} \\ \texttt{\#else} \\ \texttt{  do\_something\_else()} \\ \texttt{\#endif}};
-        \node[draw,align=left] (ES) at (6,0) {\texttt{\#ifdef A} \\ \texttt{  do\_something\_different()} \\ \texttt{\#else} \\ \texttt{  do\_something\_else()} \\ \texttt{\#endif}};
+        \node[draw,align=left] (ES) at (7,0) {\texttt{\#ifdef A} \\ \texttt{  do\_something\_different()} \\ \texttt{\#else} \\ \texttt{  do\_something\_else()} \\ \texttt{\#endif}};
         \node[draw,align=left] (OV) at (0,-4) {\texttt{\#ifdef A} \\ \texttt{  do\_something()} \\ \texttt{\#else} \\ \texttt{  do\_something\_else()} \\ \texttt{\#endif}};
-        \node[draw,align=left] (EV) at (6,-4) {\texttt{\#ifdef A} \\ \texttt{  do\_something\_different()} \\ \texttt{\#else} \\ \texttt{  do\_something\_else()} \\ \texttt{\#endif}};            
+        \node[draw,align=left] (EV) at (7,-4) {\texttt{\#ifdef A} \\ \texttt{  do\_something\_different()} \\ \texttt{\#else} \\ \texttt{  do\_something\_else()} \\ \texttt{\#endif}};            
 
         \path[] (OV) edge[double,-Stealth] node[midway, below] {Manual edit} (EV);
         \path[] (OS) edge[bend left=-30,double,-Stealth] node[left] {$\mathit{get}\left(\cdot, \mathit{true}\right)$} (OV);

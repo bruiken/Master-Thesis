@@ -1,0 +1,299 @@
+\chapter{Implementation}\label{ch:implementation}
+In this chapter, we will present the implementation of the operators in the
+Virtual Platform. The implementation of the Virtual Platform is not a one-to-one match
+of the formalisation created in this work, our formalisation abstracts away some details
+that are present in the implementation. We aim to give an overview of our implementation.
+After the overview, we go into more detail of selected, particularly interesting parts of the implementation.
+
+The implementation itself is written in Scala\footnote{\url{https://www.scala-lang.org/}} and
+can be found in the source code of the Virtual Platform\footnote{\url{https://bitbucket.org/easelab/vp/src/master/}},
+which is open source. The Virtual Platform contains many different operators, the \emph{get}
+and \emph{put} functions are thus added as two new operators. 
+
+\section{\emph{Get} Operator}
+\begin{lstfloat}
+\begin{lstlisting}[language=Scala,numbers=left,showstringspaces=false]
+override def perform(): Boolean = {
+  if (getImmediateAncestorFeatureModel(Some(asset)).isEmpty) {
+    log.error("Cannot apply operator on an asset without a feature model")
+    return false
+  }
+  
+  val assetClone = asset.doClone()
+  
+  var parentFM: Option[FeatureModel] = None
+  if (assetClone.parent.isDefined) {
+    parentFM = assetClone.parent.get.foldFeatureModels()
+  }
+  if (assetClone.featureModel.isDefined && parentFM.isDefined) {
+    assetClone.featureModel.get.crossTreeConstraints :+= parentFM.get.asExpression
+  } else if (assetClone.featureModel.isEmpty) {
+    assetClone.featureModel = parentFM
+  }
+  
+  if (assetClone.parent.isDefined) {
+    assetClone.featureModel.get.crossTreeConstraints :+= assetClone.parent.get.foldPresenceConditions()
+  }
+  
+  assetClone.featureModel.get.crossTreeConstraints :+= choice
+  
+  val result = applyChoice(assetClone)
+  
+  if (result.isEmpty) {
+    log.warn("The given choice resulted in an empty asset tree")
+    false
+  } else {
+    val root = asset.getRoot()
+    if (root.isDefined) {
+      root.get.unassignedAssets :+= result.get
+    }
+    true
+  }
+}
+\end{lstlisting}
+\caption{Implementation of the \emph{get} operator}
+\label{lst:getoperator}
+\end{lstfloat}
+
+In Listing~\ref{lst:getoperator}, we can see the source code for the \emph{get} operator.
+The first check in the operator is the availability of a feature model somewhere in the
+ancestors of the asset that the operator is applied on. We need this to save the folded
+feature models and presence conditions. This is also a difference between the implementation
+and the formalisation: the formalisation sees the feature model as an expression, while the
+implementation sees the feature model as a tree of features, together with a list of
+expressions that can be used as cross tree constraints. We want to access the cross-tree
+constraints and thus need some feature model to save them into. This check can be found in
+lines 2-5. 
+
+To continue, we first clone the target asset, such that we can use it to change it without
+changing the original asset. This cloning is done using the \texttt{.doClone()} method in
+line 7.
+
+Next, we fold the parent feature models using the \texttt{.foldFeatureModels()} method, this
+method results in an optional new feature model. We want to save this folded feature model
+in either the cross tree constraints of the feature model of the current asset, or as the
+feature model of the current asset in general. This is depending on if the current asset
+already has a feature model. This is done in lines 9-17. The same is then done for the 
+presence conditions in the ancestors of the current asset. This time we do not have to
+check if the current asset has a feature model, as we already know this from the previous
+step. The folded presence conditions are saved in lines 19-23.
+
+Lastly, the actual pruning of the assets is done using the \texttt{applyChoice()} method.
+We will cover this in more detail next, assume for now that this method results in an 
+optional asset (line 25). Then in lines 27-36 the result is parsed. If there is no result
+(the target asset was not included in the result), the user is warned about this. Otherwise,
+we save the new asset in the \emph{unassignedAssets} of the root asset. This is another
+difference between the implementation and the formalisation, we want to keep the full
+tree connected in the implementation. To do this, we have to include the cloned asset in
+the original asset tree. This is done by attaching the cloned assets to the \emph{unassignedAssets}.
+
+\begin{lstfloat}
+\begin{lstlisting}[language=Scala,numbers=left,showstringspaces=false]
+private def applyChoice(localAsset: Asset): Option[Asset] = {
+  var expression = localAsset.presenceCondition & choice
+  if (localAsset.featureModel.isDefined) {
+    expression &= localAsset.featureModel.get.asExpression
+  }
+  if (SATSolver.solve(expression) == UNSAT()) {
+    None
+  } else {
+    val cloneAsset = localAsset.doClone()
+    cloneAsset.children = localAsset.children.flatMap(applyChoice)
+    Some(cloneAsset)
+  }
+}
+\end{lstlisting}
+\caption{Implementation of the \emph{applyChoice} method}
+\label{lst:getoperator:applychoice}
+\end{lstfloat}
+
+\subsection{The \emph{applyChoice} Method}
+The workings of the \emph{get} operator have been explained in the previous section,
+but this explanation skips over the most important function of the operator. This
+function actually does the filtering of the assets to decide which ones should end up
+in the result. It is called \emph{applyChoice} and its implementation can be found in
+Listing~\ref{lst:getoperator:applychoice}.
+
+The function takes one argument, which is the asset that we are currently looking at
+(\emph{localAsset}). We first want to create the expression which we want to check for
+satisfiability, we do this by creating a conjunction with the \emph{choice}, the local
+presence condition, and the local feature model. The feature model is optional, so we
+have to do an extra check before using it. This expression is built in lines 2-5.
+
+Next, we actually apply a SAT solver to check the expression for satisfiability, for
+this, we use the SAT solver available in the Virtual Platform. If this is not satisfiable
+(the result is \emph{UNSAT}), we return \emph{None} to indicate that the asset should
+not appear in the result asset set. If the expression was satisfiable, we want to return
+the asset. Before returning it however, we want to apply the filtering function on the children
+of the asset. 
+
+\section{\emph{Put} Operator}
+\begin{lstfloat}
+\begin{lstlisting}[language=Scala,numbers=left,showstringspaces=false]
+override def perform(): Boolean = {
+  if (!doSanityChecks()) return false
+  filterChangedAssets()
+
+  for (changedAsset <- changedAssets) {
+    if (targetAssetMap.contains(changedAsset)) {
+      targetAssetMap(changedAsset).presenceCondition &= !ambition
+    }
+    if (sourceAssetMap.contains(changedAsset)) {
+      sourceAssetMap(changedAsset).presenceCondition &= ambition
+      insertNewAsset(sourceAssetMap(changedAsset))
+    }
+  }
+
+  val targetRoot = targetAsset.getRoot().get
+  targetRoot.unassignedAssets = targetRoot.unassignedAssets filterNot {_.name == asset.name}
+
+  true
+}
+\end{lstlisting}
+\caption{Implementation of the \emph{put} operator}
+\label{lst:putoperator}
+\end{lstfloat}
+The main function of the implementation of the \emph{Put} operator closely
+matches the definition we gave in pseudocode in Algorithm~\ref{alg:vp:put}.
+The operator starts by doing a number of sanity checks on the assets on which
+the operator was applied. These checks make sure that the changed assets are
+valid, the target asset is actually the source of the new asset, if the
+new asset is correctly created using the \emph{get} operator, and finally if
+the new asset tree satisfies the limitation we created for the \emph{put}
+operator. This is done in line 2.
+
+In the next line, we filter the changed assets, such that changed assets
+that are children of another changed asset are removed from the list (line 3).
+The following for loop enumerates the changed assets and applies the necessary
+changes to the original asset tree. At this point it should be noted that even
+before calling the \emph{put} operator, two maps are created to easily access the
+old and new assets from their respective asset trees. These are called the 
+\emph{targetAssetMap} for the original asset tree and \emph{sourceAssetMap} for
+the new asset tree. These maps can be used to check if the changed assets are
+edited, created or deleted. The necessary changed are made to the presence conditions
+(adding the ambition or the negation of the ambition) and the new asset is inserted
+in the asset tree using the \texttt{insertNewAsset} method in case this is needed.
+We will go into more detail of this function later. This process can be found in
+lines 5-13. Lastly, we remove the cloned asset tree from the \emph{unassignedAssets}
+field of the target asset tree, as the \emph{get}-\emph{put} cycle is now complete
+(lines 15-16).
+
+\begin{lstfloat}
+\begin{lstlisting}[language=Scala,numbers=left,showstringspaces=false]
+private def insertNewAsset(newAsset: Asset): Unit = {
+  if (targetAssetMap.contains(newAsset.name)) {
+    val oldAsset = targetAssetMap(newAsset.name)
+    val oldAssetIndex = oldAsset.parent.get.children.indexOf(oldAsset)
+    oldAsset.parent.get.children = Put.insertInList(oldAsset.parent.get.children, newAsset, oldAssetIndex + 1)
+  } else if (Put.childrenAreOrdered(newAsset.parent.get.assetType)) {
+    val targetParent = targetAssetMap(newAsset.parent.get.name)
+
+    val lowerBound = ...
+    val upperBound = ...
+    var newIdx = -1
+    if (lowerBound == upperBound) {
+      newIdx = lowerBound
+    } else {
+      do {
+        print(f"Please select an index for asset ${newAsset.name}")
+        newIdx = scala.io.StdIn.readInt()
+      } while (newIdx > upperBound || newIdx < lowerBound)
+    }
+    targetParent.children = Put.insertInList(targetParent.children, newAsset, newIdx)
+  } else {
+    val targetParent = targetAssetMap(newAsset.parent.get.name)
+    targetParent.children = Put.insertInList(targetParent.children, newAsset, idx = 0)
+  }
+}
+\end{lstlisting}
+\caption{Implementation of the \emph{insertNewAsset} method}
+\label{lst:putoperator:insertnewasset}
+\end{lstfloat}
+
+\subsection{The \emph{insertNewAsset} Method}
+Before, we have seen the general structure of how the \emph{put} operator
+is implemented. Let us now look at the most important function of the implementation,
+namely the one that actually inserts the new assets into the source asset tree.
+This function is called \emph{insertNewAsset}, it takes as an argument the asset to add
+(called \emph{newAsset}). Its implementation can be found in Listing~\ref{lst:putoperator:insertnewasset}.
+
+The method is mainly split up into three cases: the first case is an edit operation, in
+which we already know where to place the new asset (lines 2-5). The second case is the case where
+it is an addition of a new asset, where the ordering is important (lines 6-20). The last case is a
+new asset where the ordering does not matter (lines 21-24).
+
+\subsubsection*{Edit Operation}
+The first case is an edit operation of an asset. We have a new asset to add, and we want to
+place it right beside the asset that was edited. An asset can be added using the
+\texttt{insertInList} method, for which we only need the new index of the asset.
+To get the index, we first get the original of the edited asset in line 3. With this asset,
+we can decide the index using the \texttt{indexOf} method in line 4. The insertion in the list
+of children is then done in line 5.
+
+\subsubsection*{Ordered Addition Operation}
+As mentioned in the formalisation, when an asset is added and we have multiple choices
+for the new location, we have to ask the programmer where they want to place the new
+asset. We first decide the lower- and upper bounds for the location in lines 7-11. If 
+these bounds are equal, we have only one possible location and do not have to ask the
+programmer for help (lines 12-13). Otherwise, we ask the programmer for help (lines 14-19).
+Note that the message the programmer gets is simplified in the listing shown here. Lastly,
+we insert the new asset in the chosen location in line 20.
+
+\subsubsection*{Unordered Addition Operation}
+Lastly, we have the unordered addition operation. This is used for assets that do not have
+to be ordered (such as files). Here, we simply add the new asset to the first position of
+the list of children. This is the simplest variant as no index calculation has to be done.
+We can simply get the target parent and add the new child to it (lines 21-24).
+
+\section{Final Remarks}
+In this chapter, we have seen the major parts of the implementation of the operators.
+One last remark that should be made is the shortcoming of the current implementation.
+The Virtual Platform of course does not work without serialisation and deserialisation
+of the code that is represented using the asset trees. Without these steps, editing the
+code is near impossible. We have not implemented the (de)serialisation of the cloned
+asset trees, because the Virtual Platform currently cannot (de)serialise presence
+conditions that are not disjunctions of features. We need more complex presence conditions
+to support our operators. Before support is created for (de)serialisation of presence
+conditions in the shape of any expressions, our created operators are not fully finished.
+The core logic is still implemented and it can still be used as a proof of concept, simply
+without actually having the source files generated.
+
+\begin{figure}
+    \centering
+    \begin{tikzpicture}
+        \node[draw,align=left] (ES) at (7,0) {\texttt{Root()} \\ \mbox{\texttt{~Repo()}} \\ \mbox{\texttt{~~File()}} \\ \mbox{\texttt{~~~c1 [!GUI]}} \\ \mbox{\texttt{~~~c1 [GUI]}} \\ \mbox{\texttt{~~~c4 [GUI]}} \\ \mbox{\texttt{~~~~m1()}} \\ \mbox{\texttt{~~~c2 [CLI]}} \\ \mbox{\texttt{~~~c3 [logging]}}};
+        \node[draw,align=left] (OS) at (0,0) {\texttt{Root()} \\ \mbox{\texttt{~Repo()}} \\ \mbox{\texttt{~~File()}} \\ \mbox{\texttt{~~~c1()}} \\ \mbox{\texttt{~~~c2 [CLI]}} \\ \mbox{\texttt{~~~c3 [logging]}}};
+        \node[draw,align=left] (OV) at (0,-4.5) {\texttt{Repo()} \\ \mbox{\texttt{~File()}} \\ \mbox{\texttt{~~c1()}}};
+        \node[draw,align=left] (EV) at (7,-4.5) {\texttt{Repo()} \\ \mbox{\texttt{~File()}} \\ \mbox{\texttt{~~c1()}} \\ \mbox{\texttt{~~c4()}} \\ \mbox{\texttt{~~~m1()}}};
+
+        \path[] (OV) edge[double,-Stealth] node[midway, below] {Manual edit} (EV);
+        \path[] (OS) edge[bend left=-30,double,-Stealth] node[left] {$\mathit{get}\left(\cdot, \neg\mathit{CLI}\right)$} (OV);
+        \path[] (EV) edge[bend right=30,double,-Stealth] node[left] {$\mathit{put}\left(\cdot, \left\{ c_1, c_4, m_1 \right\}, \cdot, \neg\mathit{CLI}, \mathit{GUI}\right)$} (ES);
+    \end{tikzpicture}
+    \caption{Example~\ref{example:putoperator} recreated using the Virtual Platform.}
+    \label{fig:implementation:example}
+\end{figure}
+
+\begin{example}[Continuation of Example~\ref{example:putoperator}]
+  In this example, we will recreate the example of the \emph{put} operator in
+  the implementation in the Virtual Platform. The result of the previous
+  example of the \emph{put} operator can be found in Figure~\ref{fig:example:put}.
+  The visualisation that the Virtual Platform gives is seen in Figure~\ref{fig:implementation:example}.
+  Here, a tree structure is shown of how the assets relate to each other. An identation
+  means that the asset is a child asset of the asset above. The name of the asset is shown
+  together with an optional presence condition between square braces. 
+  It can be seen that this represents the same structure as seen in the previous example
+  using the \emph{put} operator from the formalisation.
+  The only thing that the Virtual Platform asked of us is that we have to give a 
+  location for $c_4$, as it can be put it multiple places: this is the alignment conflict.
+  The way the Virtual Platform asks this is as follows:
+  \begin{verbatim}
+An alignment conflict has occurred!
+1-> c1 <-2-> c2 <-3
+Please select an index for asset c4 (within the range [1, 3]):
+  \end{verbatim}
+  This represents the children of the \emph{File} asset, we see $c_1$ and $c_2$ together
+  with numbers pointing to them. We can now choose either $1$, $2$ or $3$ to select a
+  location: $1$ to place the new asset \emph{before} $c_1$, $2$ to place it \emph{after}
+  $c_1$, and $3$ to place it \emph{after} $c_2$. We choose $2$ here, to adhere to the example.
+\end{example}

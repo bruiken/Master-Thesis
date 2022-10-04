@@ -1,12 +1,8 @@
 \documentclass[11pt,a4paper]{report}
 
-% \usepackage{url}
 \usepackage[utf8]{inputenc}
 \usepackage[T1]{fontenc}
-% \usepackage{graphicx}
 \usepackage[all]{xy}
-% \usepackage{amsfonts}
-% \usepackage{todonotes}
 \usepackage{array}
 \usepackage{listings}
 \usepackage[a4paper]{geometry}
@@ -50,6 +46,9 @@
 
 \graphicspath{{imgs/}}
 
+\newfloat{lstfloat}{htbp}{lop}
+\floatname{lstfloat}{Listing}
+
 \begin{document}
 \begin{titlepage}
 \begin{center}
@@ -91,6 +90,9 @@ Thorsten Berger\\
 
 \setcounter{tocdepth}{1}
 \tableofcontents
+\newpage
+\listoffigures
+\newpage
 
 \setlength{\parskip}{10pt}
 
@@ -98,6 +100,7 @@ Thorsten Berger\\
 \input{background}
 \input{formalisation}
 \input{configlenses}
+\input{implementation}
 \input{evaluation}
 \input{relatedwork}
 \input{conclusion}

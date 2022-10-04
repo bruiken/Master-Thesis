@@ -3,12 +3,12 @@ In this section we present a new lens definition building on the formalisations
 of the \emph{put} and \emph{get} operators we have created in the previous
 section. We will expand on the lenses we have introduced in Section~\ref{sec:background:lenses}.
 
-\noindent\emph{Configuration.}
+\section{Configuration}
 If we want to constrain our \emph{get} and \emph{put} operators from
 Sections \ref{sec:vp:getoperator} and \ref{sec:vp:putoperator} into a lens, we
 need to create a new kind of lens. The reason is that the typing of the
-standard lenses constrict us too much to be able to fit our
-operators.
+standard lenses constrain us too much in terms of the types they have. Our
+new arguments cannot fit into this old definition.
 
 To allow for this new lens to be applicable beyond the scope of the Virtual
 Platform, we extract more general types from our formalisations of the
@@ -25,7 +25,7 @@ structure as we have seen it before, but now it comes with an \(E\): this part
 carries the configuration information (in our case, the expression or choice.)
 The result of the \emph{get} function still is the abstract structure as before. Note
 that we \emph{will} show the definitions of the \emph{create} functions here, 
-but we will not go into the implementations of this function. This implementation
+but we will not go into the implementation of this function. This implementation
 would involve the creation of a new system in the Virtual Platform starting from an
 existing codebase.
 
@@ -78,7 +78,7 @@ the system as a whole can also be seen in Figure \ref{fig:operator:overview}.
   \label{fig:operator:overview}
 \end{figure}
 
-\subsection*{Virtual Platform}\label{sec:configlenses:vp}
+\section{Virtual Platform}\label{sec:configlenses:vp}
 We want to work towards proving the defined lens laws for our instance of the
 lens. Before we start working on that, let us first look at how we
 should fill in the abstract types in order to fit our \emph{get} and \emph{put}
@@ -182,7 +182,7 @@ indeed makes our definition of \emph{put} adhere to the lens laws.
   \label{fig:operator:vp:example}
 \end{figure}
 
-\subsection*{Proving the lens laws}
+\section{Proving the lens laws}
 We want to show that the proposed lens laws hold for the formalisation of the
 operators created for the virtual platform. We will start with the \getput~ law
 and then prove the \putget~ law.
@@ -305,3 +305,42 @@ and then prove the \putget~ law.
   does not change if we apply the \emph{get} operator after a \emph{put} operator
   if we choose the ambition as elaborated on, proving that the \putget~ law holds.
 \end{proof}
+
+\begin{example}[Continuation of Example~\ref{example:putoperator}]
+  In the previous example, where we have shown how the \emph{put} operator works,
+  we already hinted on that the figure visualising the example (Figure~\ref{fig:example:put})
+  resembles the figure visualising how a lens works (now Figure~\ref{fig:operator:overview}).
+  Let us now exemplify the arrows defining the lens laws by applying the laws. We start with
+  the easiest, the \getput~law. This one is easy, because our \emph{put} operator works by
+  looping through all the changes, of which we have none. The \emph{empty} function that is
+  applied on the result simply gives back an empty set of changes. Because of this, we result
+  in the original view $f_1$. 
+
+  The \putget~law is somewhat more involved. We want to go from $f'_1$ to $f'_2$ using an
+  application of the \emph{get} operator. The \emph{choice} in this case, is a combination
+  of the original choice and the ambition. We have also already figured out that this 
+  combination is a conjunction operator (\(\land\)). Since our original choice was \( \neg\mathit{C} \)
+  and the ambition was \emph{G}, our new choice is \(\neg\mathit{C} \land \mathit{G}\) and 
+  the full application of the \emph{get} operator looks like
+  \( \mathit{get}\left( f'_1, \neg\mathit{C} \land \mathit{G} \right) \).
+  We know that the asset labelled by $f'_1$ will pass through the \emph{get} operator as
+  it does not have a presence condition (and we know that the feature model is valid with
+  our new choice). We can look at every child of this local root asset and see which ones
+  are valid for the \emph{get} operator:
+  \begin{itemize}
+    \item The asset labelled by $c_1$ does not pass the operator, as its presence condition
+          is \(\neg\mathit{G}\). This presence condition is not satisfiable with our choice.
+    \item The asset labelled by $c'_1$ does pass the checks, as its presence condition (\emph{G})
+          is satisfiable with our choice (and the feature model).
+    \item The asset labelled by $c_4$ has the same presence condition as $c'_1$ and will thus also
+          be in the result of the \emph{get} operator. We already know that the child of this asset
+          ($m_1$) will also be in the result set as it does not have any further presence conditions
+          or feature models.
+    \item The asset labelled by $c_2$ will not be in the result set as its presence condition contradicts
+          the \emph{choice}.
+    \item The asset labelled by $c_3$ will also not be in the result set. Its presence condition
+          contradicts the choice in combination with the feature model of the system.
+  \end{itemize}
+  As is clear, we end up with $f'_1$, $c'_1$ and $c_4$. These are exactly the assets that are also
+  present in the edited view $f'_2$.
+\end{example}

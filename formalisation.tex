@@ -1,7 +1,7 @@
 \chapter{Formalisation}\label{sec:vp:formalisation}
 In this section, we formally define the conceptual structures that comprise the
 Virtual Platform. After we have formally defined the structures, we define the
-lens functions in terms of this formalisation.
+lens functions on top of this formalisation.
 
 \section{Main Data Structures}
 We have a set of features \(\features\), which contain the names of the
@@ -22,10 +22,9 @@ with the ``no value'' (\( \bot \)) value:
 \( \expressions{\features} \) are expressions over features defined using the
 following grammar:
 \[
-  e \grammarDefinedAs f \mid \hspace*{1mm} \notfeature{e} \mid \truefeature \mid \falsefeature \mid \binopfeature{e}{e}
+  e \grammarDefinedAs f \mid \hspace*{1mm} \notfeature{e} \mid \truefeature \mid \falsefeature \mid {e}\binopand{e} \mid e \binopor e \mid e \binopimplies e
 \]
-Here, \( \binopsymbol \in \left\{ \binopand , \binopor , \binopimplies \right\} \)
-and \( f \in \features \). The operators are logical conjunctions,
+Here we have that \( f \in \features \). The operators are logical conjunctions,
 logical disjunctions and logical implications.
 
 \noindent
@@ -487,7 +486,7 @@ one seems obvious: its presence condition is \emph{CLI}, and we have the negatio
 choice. The second one is actually missing because of our feature model, which says that
 \emph{logging} can only co-exist with the \emph{CLI} feature. The checks done by the \emph{get}
 operator then look as follows (remember that \(\mathit{fm}\) is defined by
-\(\mathit{logging} \Rightarrow \mathit{CLI}\):
+\(\mathit{logging} \Rightarrow \mathit{CLI}\)):
 
 \begin{itemize}
   \item For $a_4$ (labelled by $f_1$): \(\neg\mathit{CLI} \land \mathit{fm}\in\sat\).
@@ -505,14 +504,15 @@ operator then look as follows (remember that \(\mathit{fm}\) is defined by
         \emph{CLI}). This also leads to an unsatisfiable situation, as our feature model says that
         \emph{CLI} is implied by \emph{logging}. In this case, \emph{logging} holds yet \emph{CLI} does not.
 \end{itemize}
-Because of the unsatisfiability of assets $a_2$ and $a_3$, they are not present in the result.
+Because of the unsatisfiability of the presence conditions of assets $a_2$ and $a_3$, they are not present in the result.
 \end{example}
 
 \section{Put Operator}\label{sec:vp:putoperator}
 In this section, we will introduce the semantics for the put operator for the
 Virtual Platform. We first introduce the idea of the operator, then some new 
-notation, and then show the formalisation partly in the way we have seen 
-before, and partially using pseudocode.
+notation, and finally give the formalisation of the \emph{put} operator.
+The formalisation of the final operator will be given in terms of pseudocode,
+where the helper functions will be defined as well have seen previously.
 
 The \emph{put} operator, in a way, does the opposite of the \emph{get} 
 operator. We want this operator to include the retrieved asset tree of the
@@ -521,7 +521,7 @@ operator. We want this operator to include the retrieved asset tree of the
 the two operators, we will even see that if there are no changes, the
 \emph{put} operator is trivial.
 
-\subsection*{Distinguishing Assets}
+\subsection{Distinguishing Assets}
 We first create a way to distinguish between the assets in the ``original''
 asset tree and the asset tree created after the \emph{get} operator (we will
 also refer to this as the ``new'' tree.) This new and old tree have assets in
@@ -550,7 +550,7 @@ that they are unique in the old and new asset sets:
 This limitation ensures that any existing asset in the new set will map to
 exactly one asset in the old set.
 
-\subsection*{Put By Diff}
+\subsection{Put By Diff}
 Applying the put operator means that we apply the changed assets to the
 existing asset tree. One way to do this is by applying a ``diff'' of the tree
 much like we have diffs for code in versioning contexts. We identify three
@@ -597,7 +597,7 @@ Another option would be to calculate the diff using the old and new asset trees.
 This would cost a lot of computing power as we would need to compare every
 asset and its contents.
 
-\subsection*{Formalisation}
+\subsection{Formalisation}
 Now that we have the idea of the \emph{put} laid down, we can create the actual
 formalisation.
 
@@ -911,25 +911,33 @@ models is irrelevant.
   \label{fig:example:put}
 \end{figure}
 
-\begin{example}[Continuation of Example \ref{example:getoperator}]
+\begin{example}[Continuation of Example \ref{example:getoperator}]\label{example:putoperator}
   We continue the example in which we applied the \emph{get} operator to the
   system we introduced even before that. Specifically, we will continue the
   second example where we applied the \emph{get} operator with as choice
   expression \(\neg\mathit{CLI}\). An overview can be seen in Figure~\ref{fig:example:put}.
-  Note that we shortened the names of the features to their first letters.
-The actual edit this time is to add a new feature called \emph{GUI} (in the
-figure shortened to just \emph{G}.) For this, we have to edit $a_1$ (identified
-by $c_1$) and we have to add two new assets identified by $c_4$ and $m_1$,
-respectively. The latter addition is a child of the first one. Now when we apply
-the \emph{put} operator, we apply it with as ambition \emph{G}, since we want
-these changes to apply to the \emph{GUI} feature. The operator first filters the
-changed assets set to only contain the relevant assets. This filter removes $m_1$
-from the set since it is a child of $c_4$, it will be automatically applied when
-applying $c_4$. We first apply $c_1$, which is simple as it is just an edit action.
-The old asset from the original tree used to have the trivial presence condition,
-this becomes the negation of the ambition. The new version of $c_1$, in the result
-identified as $c'_1$, gets as presence condition the ambition. Lastly, we need to
-apply $c_4$, this leads to an alignment conflict as we do not know if we should add
-it before $c_2$, after $c_2$ or after $c_3$. We decide to put it right after $c'_1$.
-This new asset also gets the ambition as its presence condition.
+  Note that we shortened the names of the features to their first letters (\emph{C} stands for
+  \emph{CLI} and \emph{L} stands for \emph{logging}).
+  The actual edit this time is to add a new feature called \emph{GUI} (in the
+  figure shortened to just \emph{G}). To do this, we have to edit $a_1$ (identified
+  by $c_1$) and we have to add two new assets identified by $c_4$ and $m_1$
+  respectively. The latter addition is a child of the first one. Now when we apply
+  the \emph{put} operator, we apply it with as ambition \emph{G}, since we want
+  these changes to apply to the \emph{GUI} feature. The operator first filters the
+  changed assets set to only contain the relevant assets. This filter removes $m_1$
+  from the set since it is a child of $c_4$. We can do this becauase this child asset
+  will be automatically applied when applying its parent ($c_4$).
+  We first apply $c_1$, which is simple as it is just an edit action.
+  The old asset from the original tree used to have the trivial presence condition,
+  this becomes the negation of the ambition. The new version of $c_1$, in the result
+  identified as $c'_1$, gets as presence condition the ambition. Lastly, we need to
+  apply $c_4$, this leads to an alignment conflict as we do not know if we should add
+  it before $c_2$, after $c_2$ or after $c_3$. We do not know this because $c_2$ and $c_3$
+  were hidden in the view. The programmer did not see these classes when they created the
+  new class. Since this process now requires a human in the loop, we magically decide to
+  put it right after $c'_1$. This new asset also gets the ambition as its presence condition.
+  Note that the Figure resembles the same shape as the figure showing the lens overview
+  before (Figure~\ref{fig:lens:overview}). In that figure, we also displayed the arrows in
+  reverse and showed that they corresponded with the lens laws. How the lens laws work for
+  our work is explained in the following section.
 \end{example}
