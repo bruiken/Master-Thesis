@@ -21,6 +21,7 @@ of the \emph{get} and \emph{put} operators. With this new formalisation, we had
 to adapt the existing lens laws for our new lens and we have proven that our
 implementation of the lens adheres to these adapted lens laws.
 
+\section{Future Work}
 There are several possible directions for future work. First, it would be worthwhile
 to study the usability of our proposed operations using a user study, 
 in which developers could solve some program evolution tasks in a certain view and use 
@@ -28,3 +29,13 @@ our framework to keep the view synchronized with the overall platform. Second, w
 we achieved our results in the context of a specific variability management system 
 (Virtual Platform), it would be interesting to further increase the scope of our 
 contribution by investigating alternative program representations.
+
+Another direction for future work could be done in terms of an editor that better
+supports view-based editing. It is currently challenging to save the mapping of features
+to lines of code, as code files are merely text files. To save mappings, we need either
+some form of comment (that would be visible to the developer), or an external file with
+the mapping. The latter of the two methods comes with the benefit that it is not visible
+to the user, but maintaining this line mapping is difficult when the file is edited. An
+editor that can save the line mappings internally, thus keeping the feature-to-line information,
+may improve the usability of view-based editing. We expect that it might even remove the need
+for ambitions in certain editing cases.
